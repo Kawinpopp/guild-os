@@ -66,22 +66,24 @@ export default function Moderation() {
           filter: `community_id=eq.${community.id}`,
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (payload) => setPosts((prev) => [payload.new as any, ...prev])
+        (payload) => setPosts((prev) => [payload.new as any, ...prev]),
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [community]);
 
   const setStatus = async (id: string, status: "approved" | "removed") => {
-    const { error } = await supabase
-      .from("flagged_posts")
-      .update({ status })
-      .eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    const { error } = await supabase.from("flagged_posts").update({ status }).eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     setPosts((prev) =>
       filter === "all"
         ? prev.map((p) => (p.id === id ? { ...p, status } : p))
-        : prev.filter((p) => p.id !== id)
+        : prev.filter((p) => p.id !== id),
     );
     if (selected?.id === id) setSelected(null);
     if (status === "removed") {
@@ -112,9 +114,7 @@ export default function Moderation() {
       <div className="flex items-end justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-3xl mb-1">AI Moderation</h1>
-          <p className="text-sm text-muted-foreground">
-            ตรวจจับและจัดการโพสต์ที่ไม่เหมาะสมด้วย AI
-          </p>
+          <p className="text-sm text-muted-foreground">ตรวจจับและจัดการโพสต์ที่ไม่เหมาะสมด้วย AI</p>
         </div>
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Refresh
@@ -260,10 +260,7 @@ export default function Moderation() {
       {/* Detail drawer */}
       {selected && (
         <div className="fixed inset-0 z-50 flex">
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={() => setSelected(null)}
-          />
+          <div className="absolute inset-0 bg-black/60" onClick={() => setSelected(null)} />
           <div className="relative ml-auto w-full max-w-md h-full bg-card border-l border-border p-6 overflow-y-auto flex flex-col gap-5">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-display font-bold">Post Detail</h2>

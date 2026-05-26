@@ -36,9 +36,7 @@ export default function LoginPage() {
     setBusy(false);
     if (error) {
       toast.error(
-        error.message.includes("Invalid")
-          ? "อีเมลหรือรหัสผ่านไม่ถูกต้อง"
-          : error.message
+        error.message.includes("Invalid") ? "อีเมลหรือรหัสผ่านไม่ถูกต้อง" : error.message,
       );
       return;
     }
@@ -55,9 +53,7 @@ export default function LoginPage() {
         </div>
         <div className="rounded-2xl border border-border bg-card/80 backdrop-blur p-8">
           <h1 className="text-2xl mb-1">เข้าสู่ระบบ</h1>
-          <p className="text-sm text-muted-foreground mb-6">
-            เข้าใช้งาน GuildOS Admin Portal
-          </p>
+          <p className="text-sm text-muted-foreground mb-6">เข้าใช้งาน GuildOS Admin Portal</p>
           <form onSubmit={submit} noValidate className="space-y-4">
             <div className="space-y-2">
               <Label>Email</Label>
@@ -77,13 +73,7 @@ export default function LoginPage() {
                 className="h-11"
               />
             </div>
-            <Button
-              type="submit"
-              variant="hero"
-              size="lg"
-              disabled={busy}
-              className="w-full"
-            >
+            <Button type="submit" variant="hero" size="lg" disabled={busy} className="w-full">
               {busy ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
             </Button>
           </form>
@@ -95,10 +85,7 @@ export default function LoginPage() {
           </div>
         </div>
         <div className="text-center mt-6">
-          <Link
-            href="/"
-            className="text-xs text-muted-foreground hover:text-foreground"
-          >
+          <Link href="/" className="text-xs text-muted-foreground hover:text-foreground">
             ← กลับหน้าหลัก
           </Link>
         </div>

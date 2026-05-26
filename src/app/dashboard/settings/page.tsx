@@ -24,13 +24,7 @@ import {
   Shield,
 } from "lucide-react";
 
-type Tab =
-  | "ai"
-  | "integrations"
-  | "health"
-  | "platforms"
-  | "profile"
-  | "subscription";
+type Tab = "ai" | "integrations" | "health" | "platforms" | "profile" | "subscription";
 
 const TABS: { k: Tab; label: string; icon: typeof Cpu }[] = [
   { k: "ai", label: "AI Config", icon: Cpu },
@@ -103,12 +97,9 @@ function AIConfig() {
       matchmaker?: { rules?: Record<string, number>; time_window?: number };
     };
     if (s.moderation?.threshold) setThreshold(s.moderation.threshold);
-    if (typeof s.moderation?.auto_remove === "boolean")
-      setAutoRemove(s.moderation.auto_remove);
-    if (s.matchmaker?.rules)
-      setRules((prev) => ({ ...prev, ...s.matchmaker!.rules }));
-    if (typeof s.matchmaker?.time_window === "number")
-      setTimeWindow(s.matchmaker.time_window);
+    if (typeof s.moderation?.auto_remove === "boolean") setAutoRemove(s.moderation.auto_remove);
+    if (s.matchmaker?.rules) setRules((prev) => ({ ...prev, ...s.matchmaker!.rules }));
+    if (typeof s.matchmaker?.time_window === "number") setTimeWindow(s.matchmaker.time_window);
   }, [community?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const save = async () => {
@@ -118,10 +109,7 @@ function AIConfig() {
       moderation: { threshold, auto_remove: autoRemove },
       matchmaker: { rules, time_window: timeWindow },
     };
-    await supabase
-      .from("communities")
-      .update({ settings: next })
-      .eq("id", community.id);
+    await supabase.from("communities").update({ settings: next }).eq("id", community.id);
     toast.success("บันทึกแล้ว");
     refetch();
   };
@@ -138,14 +126,9 @@ function AIConfig() {
           <div>
             <div className="font-semibold text-sm">Confidence Threshold</div>
             <div className="text-xs text-muted-foreground mt-1">
-              ปัจจุบัน:{" "}
-              <span className="text-primary font-semibold">
-                {threshold.toFixed(2)}
-              </span>{" "}
-              · Auto-remove:{" "}
-              <span
-                className={autoRemove ? "text-accent" : "text-muted-foreground"}
-              >
+              ปัจจุบัน: <span className="text-primary font-semibold">{threshold.toFixed(2)}</span> ·
+              Auto-remove:{" "}
+              <span className={autoRemove ? "text-accent" : "text-muted-foreground"}>
                 {autoRemove ? "เปิด" : "ปิด"}
               </span>
             </div>
@@ -161,9 +144,7 @@ function AIConfig() {
         <div>
           <div className="flex items-center justify-between text-sm mb-2">
             <Label>Threshold (quick adjust)</Label>
-            <span className="font-semibold text-primary">
-              {threshold.toFixed(2)}
-            </span>
+            <span className="font-semibold text-primary">{threshold.toFixed(2)}</span>
           </div>
           <input
             type="range"
@@ -192,9 +173,7 @@ function AIConfig() {
               min={1}
               max={10}
               value={rules[g] ?? 5}
-              onChange={(e) =>
-                setRules({ ...rules, [g]: Number(e.target.value) || 1 })
-              }
+              onChange={(e) => setRules({ ...rules, [g]: Number(e.target.value) || 1 })}
               className="w-20 h-10"
             />
             <span className="text-xs text-muted-foreground">คน</span>
@@ -224,13 +203,8 @@ function AIConfig() {
   );
 }
 
-function Integrations({
-  community,
-}: {
-  community: { id: string; webhook_url: string };
-}) {
-  const wh = (kind: string) =>
-    `https://api.guildos.app/wh/${kind}/${community.webhook_url}`;
+function Integrations({ community }: { community: { id: string; webhook_url: string } }) {
+  const wh = (kind: string) => `https://api.guildos.app/wh/${kind}/${community.webhook_url}`;
   return (
     <div className="space-y-5">
       {(
@@ -256,9 +230,7 @@ function Integrations({
           <div className="flex items-center justify-between mb-4">
             <div>
               <div className="font-display font-bold text-lg">{p.name}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">
-                {p.desc}
-              </div>
+              <div className="text-xs text-muted-foreground mt-0.5">{p.desc}</div>
             </div>
             <span className="px-2 py-1 rounded text-[10px] font-semibold uppercase bg-accent/15 text-accent">
               Connected
@@ -266,11 +238,7 @@ function Integrations({
           </div>
           <Label className="text-xs">Webhook URL</Label>
           <div className="flex gap-2 mt-1">
-            <Input
-              value={wh(p.kind)}
-              readOnly
-              className="h-10 font-mono text-xs"
-            />
+            <Input value={wh(p.kind)} readOnly className="h-10 font-mono text-xs" />
             <Button
               size="sm"
               variant="outline"
@@ -298,11 +266,8 @@ function Integrations({
 
 function Platforms() {
   const { data: community, refetch } = useCommunity();
-  const initial = (
-    community?.settings as
-      | { platforms?: Record<string, boolean> }
-      | undefined
-  )?.platforms ?? { facebook: true, discord: true, line: false };
+  const initial = (community?.settings as { platforms?: Record<string, boolean> } | undefined)
+    ?.platforms ?? { facebook: true, discord: true, line: false };
   const [state, setState] = useState<Record<string, boolean>>(initial);
   const [notify, setNotify] = useState({ spam: true, team: false, milestone: true });
 
@@ -317,10 +282,7 @@ function Platforms() {
   const save = async () => {
     if (!community) return;
     const next = { ...(community.settings as object), platforms: state, notify };
-    await supabase
-      .from("communities")
-      .update({ settings: next })
-      .eq("id", community.id);
+    await supabase.from("communities").update({ settings: next }).eq("id", community.id);
     toast.success("บันทึกแล้ว");
     refetch();
   };
@@ -331,10 +293,7 @@ function Platforms() {
         <h2 className="text-lg mb-4">🔌 Platform Webhooks</h2>
         <div className="grid md:grid-cols-3 gap-4">
           {(["facebook", "discord", "line"] as const).map((p) => (
-            <div
-              key={p}
-              className="rounded-lg border border-border bg-background/40 p-4"
-            >
+            <div key={p} className="rounded-lg border border-border bg-background/40 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="font-semibold capitalize">{p}</div>
                 <Switch
@@ -344,9 +303,7 @@ function Platforms() {
               </div>
               <span
                 className={`text-[10px] px-2 py-0.5 rounded font-semibold ${
-                  state[p]
-                    ? "bg-accent/15 text-accent"
-                    : "bg-muted text-muted-foreground"
+                  state[p] ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground"
                 }`}
               >
                 {state[p] ? "Connected" : "Not connected"}
@@ -361,25 +318,23 @@ function Platforms() {
         <p className="text-xs text-muted-foreground -mt-2">
           รับแจ้งเตือนทาง Email เมื่อเกิดเหตุการณ์สำคัญ
         </p>
-        {(
-          [
-            {
-              k: "spam" as const,
-              t: "Spam Spike Alert",
-              d: "แจ้งเมื่อ spam เกิน 5 โพสต์ใน 1 ชั่วโมง",
-            },
-            {
-              k: "team" as const,
-              t: "Team Formed",
-              d: "แจ้งเมื่อ AI จัดทีมสำเร็จ",
-            },
-            {
-              k: "milestone" as const,
-              t: "Member Milestone",
-              d: "แจ้งเมื่อสมาชิกถึง 100, 500, 1000 คน",
-            },
-          ]
-        ).map((n) => (
+        {[
+          {
+            k: "spam" as const,
+            t: "Spam Spike Alert",
+            d: "แจ้งเมื่อ spam เกิน 5 โพสต์ใน 1 ชั่วโมง",
+          },
+          {
+            k: "team" as const,
+            t: "Team Formed",
+            d: "แจ้งเมื่อ AI จัดทีมสำเร็จ",
+          },
+          {
+            k: "milestone" as const,
+            t: "Member Milestone",
+            d: "แจ้งเมื่อสมาชิกถึง 100, 500, 1000 คน",
+          },
+        ].map((n) => (
           <div
             key={n.k}
             className="flex items-center justify-between py-2 border-b border-border/60 last:border-0"
@@ -418,10 +373,7 @@ function Profile() {
 
   const save = async () => {
     if (!community) return;
-    await supabase
-      .from("communities")
-      .update({ name, description: desc })
-      .eq("id", community.id);
+    await supabase.from("communities").update({ name, description: desc }).eq("id", community.id);
     toast.success("บันทึกแล้ว");
     refetch();
   };
@@ -430,27 +382,15 @@ function Profile() {
     <div className="rounded-xl border border-border bg-card p-6 space-y-4 max-w-2xl">
       <div className="space-y-2">
         <Label>Account Email</Label>
-        <Input
-          value={user?.email ?? ""}
-          readOnly
-          className="h-11 bg-background/40"
-        />
+        <Input value={user?.email ?? ""} readOnly className="h-11 bg-background/40" />
       </div>
       <div className="space-y-2">
         <Label>ชื่อชุมชน</Label>
-        <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="h-11"
-        />
+        <Input value={name} onChange={(e) => setName(e.target.value)} className="h-11" />
       </div>
       <div className="space-y-2">
         <Label>คำอธิบาย</Label>
-        <Input
-          value={desc}
-          onChange={(e) => setDesc(e.target.value)}
-          className="h-11"
-        />
+        <Input value={desc} onChange={(e) => setDesc(e.target.value)} className="h-11" />
       </div>
       <Button variant="hero" onClick={save}>
         บันทึก
@@ -466,32 +406,19 @@ function Subscription({ tier }: { tier: Record<string, unknown> }) {
       id: "free",
       name: "Free",
       price: "฿0",
-      features: [
-        "1 ชุมชน",
-        "1,000 สมาชิก",
-        "AI Moderation พื้นฐาน",
-      ],
+      features: ["1 ชุมชน", "1,000 สมาชิก", "AI Moderation พื้นฐาน"],
     },
     {
       id: "pro",
       name: "Pro",
       price: "฿990 / เดือน",
-      features: [
-        "3 ชุมชน",
-        "30,000 สมาชิก",
-        "Smart Matchmaker",
-        "Priority support",
-      ],
+      features: ["3 ชุมชน", "30,000 สมาชิก", "Smart Matchmaker", "Priority support"],
     },
     {
       id: "enterprise",
       name: "Enterprise",
       price: "ติดต่อเรา",
-      features: [
-        "ไม่จำกัดชุมชน",
-        "Custom AI models",
-        "Dedicated success manager",
-      ],
+      features: ["ไม่จำกัดชุมชน", "Custom AI models", "Dedicated success manager"],
     },
   ];
 
@@ -514,9 +441,7 @@ function Subscription({ tier }: { tier: Record<string, unknown> }) {
                 </span>
               )}
             </div>
-            <div className="text-2xl font-display font-bold mb-4">
-              {p.price}
-            </div>
+            <div className="text-2xl font-display font-bold mb-4">{p.price}</div>
             <ul className="space-y-2 text-sm mb-5">
               {p.features.map((f) => (
                 <li key={f} className="flex items-start gap-2">
@@ -541,9 +466,9 @@ function Subscription({ tier }: { tier: Record<string, unknown> }) {
 }
 
 function HealthChecks() {
-  const [checks, setChecks] = useState<
-    Array<{ name: string; status: "ok" | "fail" | "checking" }>
-  >([]);
+  const [checks, setChecks] = useState<Array<{ name: string; status: "ok" | "fail" | "checking" }>>(
+    [],
+  );
 
   const run = async () => {
     const items = [
@@ -560,10 +485,8 @@ function HealthChecks() {
       await new Promise((r) => setTimeout(r, 200));
       setChecks((prev) =>
         prev.map((c, idx) =>
-          idx === i
-            ? { ...c, status: Math.random() > 0.15 ? "ok" : "fail" }
-            : c
-        )
+          idx === i ? { ...c, status: Math.random() > 0.15 ? "ok" : "fail" } : c,
+        ),
       );
     }
   };
@@ -574,10 +497,7 @@ function HealthChecks() {
 
   const pass = checks.filter((c) => c.status === "ok").length;
   const fail = checks.filter((c) => c.status === "fail").length;
-  const allOk =
-    checks.length > 0 &&
-    fail === 0 &&
-    checks.every((c) => c.status === "ok");
+  const allOk = checks.length > 0 && fail === 0 && checks.every((c) => c.status === "ok");
 
   return (
     <div className="rounded-xl border border-border bg-card p-6 space-y-4">
@@ -609,15 +529,10 @@ function HealthChecks() {
       </div>
       <ul className="divide-y divide-border">
         {checks.map((c) => (
-          <li
-            key={c.name}
-            className="py-3 flex items-center justify-between text-sm"
-          >
+          <li key={c.name} className="py-3 flex items-center justify-between text-sm">
             <span>{c.name}</span>
             {c.status === "ok" && <Check size={18} className="text-accent" />}
-            {c.status === "fail" && (
-              <X size={18} className="text-destructive" />
-            )}
+            {c.status === "fail" && <X size={18} className="text-destructive" />}
             {c.status === "checking" && (
               <Loader2 size={18} className="text-muted-foreground animate-spin" />
             )}

@@ -104,15 +104,11 @@ export default function MemberPortal() {
           <h2 className="text-lg">ลิงก์ Portal สาธารณะ</h2>
         </div>
         <p className="text-sm text-muted-foreground">
-          แชร์ลิงก์นี้ให้สมาชิก — พวกเขาสามารถดูทีม, leaderboard และขอ
-          match request ได้โดยไม่ต้องล็อกอิน
+          แชร์ลิงก์นี้ให้สมาชิก — พวกเขาสามารถดูทีม, leaderboard และขอ match request
+          ได้โดยไม่ต้องล็อกอิน
         </p>
         <div className="flex gap-2">
-          <Input
-            value={portalUrl}
-            readOnly
-            className="h-11 font-mono text-xs bg-background/40"
-          />
+          <Input value={portalUrl} readOnly className="h-11 font-mono text-xs bg-background/40" />
           <Button
             variant="outline"
             onClick={() => {
@@ -122,10 +118,7 @@ export default function MemberPortal() {
           >
             <Copy size={14} /> Copy
           </Button>
-          <Button
-            variant="hero"
-            onClick={() => window.open(portalUrl, "_blank")}
-          >
+          <Button variant="hero" onClick={() => window.open(portalUrl, "_blank")}>
             <ExternalLink size={14} /> เปิด
           </Button>
         </div>
@@ -166,9 +159,7 @@ export default function MemberPortal() {
           </div>
           <div className="divide-y divide-border max-h-[360px] overflow-y-auto">
             {teams.length === 0 && (
-              <div className="p-8 text-sm text-center text-muted-foreground">
-                ยังไม่มีทีม
-              </div>
+              <div className="p-8 text-sm text-center text-muted-foreground">ยังไม่มีทีม</div>
             )}
             {teams.map((t) => (
               <div key={t.id} className="p-4">
@@ -219,9 +210,7 @@ export default function MemberPortal() {
           </div>
           <ul className="divide-y divide-border">
             {top.length === 0 && (
-              <li className="p-8 text-sm text-center text-muted-foreground">
-                ยังไม่มีสมาชิก
-              </li>
+              <li className="p-8 text-sm text-center text-muted-foreground">ยังไม่มีสมาชิก</li>
             )}
             {top.map((m, i) => (
               <li key={m.nickname} className="px-5 py-3 flex items-center gap-3">
@@ -240,9 +229,7 @@ export default function MemberPortal() {
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold truncate">{m.nickname}</div>
-                  <div className="text-[10px] text-muted-foreground">
-                    {m.persona_tag ?? m.role}
-                  </div>
+                  <div className="text-[10px] text-muted-foreground">{m.persona_tag ?? m.role}</div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span
@@ -277,9 +264,7 @@ export default function MemberPortal() {
           </div>
           <div className="rounded-lg bg-background/60 border border-border p-4">
             <div className="text-xs text-muted-foreground mb-1">จำนวนสมาชิก</div>
-            <div className="font-semibold">
-              {community?.member_count.toLocaleString() ?? "—"}
-            </div>
+            <div className="font-semibold">{community?.member_count.toLocaleString() ?? "—"}</div>
           </div>
         </div>
       </div>

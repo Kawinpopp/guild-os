@@ -1,6 +1,10 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import type { DiscordWebhookPayload, FacebookWebhookPayload, LineWebhookPayload } from "@/interface";
+import type {
+  DiscordWebhookPayload,
+  FacebookWebhookPayload,
+  LineWebhookPayload,
+} from "@/interface";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +20,7 @@ function getSupabase() {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ webhook_url: string }> }
+  { params }: { params: Promise<{ webhook_url: string }> },
 ) {
   const { webhook_url } = await params;
 
@@ -30,7 +34,9 @@ export async function POST(
     return NextResponse.json({ error: "Community not found" }, { status: 404 });
   }
 
-  const body = await req.json() as DiscordWebhookPayload & FacebookWebhookPayload & LineWebhookPayload;
+  const body = (await req.json()) as DiscordWebhookPayload &
+    FacebookWebhookPayload &
+    LineWebhookPayload;
 
   const author =
     body?.author?.name ||
@@ -54,11 +60,13 @@ export async function POST(
       status: "pending",
     });
 
-    await getSupabase().from("activity_feed").insert({
-      community_id: community.id,
-      type: "moderation",
-      message: `New message received from ${author}`,
-    });
+    await getSupabase()
+      .from("activity_feed")
+      .insert({
+        community_id: community.id,
+        type: "moderation",
+        message: `New message received from ${author}`,
+      });
   }
 
   return NextResponse.json({ status: "ok" });

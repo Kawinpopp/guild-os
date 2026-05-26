@@ -55,10 +55,7 @@ export default function Landing() {
             <a href="#pricing" className="hover:text-foreground transition">
               Pricing
             </a>
-            <a
-              href="#contact-form"
-              className="hover:text-foreground transition"
-            >
+            <a href="#contact-form" className="hover:text-foreground transition">
               Contact
             </a>
             <Link href="/login" className="hover:text-foreground transition">
@@ -122,9 +119,8 @@ export default function Landing() {
             <span className="text-gradient-primary">on autopilot.</span>
           </h1>
           <p className="mt-7 max-w-2xl mx-auto text-base md:text-lg text-muted-foreground leading-relaxed">
-            เปลี่ยนกลุ่ม Facebook และ Discord ของคุณให้เป็นชุมชนที่จัดการตัวเองได้
-            — AI Moderator, Smart Matchmaker และ Sponsor-ready Analytics
-            ในแพลตฟอร์มเดียว
+            เปลี่ยนกลุ่ม Facebook และ Discord ของคุณให้เป็นชุมชนที่จัดการตัวเองได้ — AI Moderator,
+            Smart Matchmaker และ Sponsor-ready Analytics ในแพลตฟอร์มเดียว
           </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
             <a href="#contact-form" className="w-full sm:w-auto">
@@ -144,9 +140,7 @@ export default function Landing() {
       {/* PAIN POINTS */}
       <section className="py-20 border-t border-border">
         <div className="max-w-6xl mx-auto px-5">
-          <h2 className="text-center text-3xl md:text-4xl mb-3">
-            ปัญหาที่แอดมินทุกคนเจอ
-          </h2>
+          <h2 className="text-center text-3xl md:text-4xl mb-3">ปัญหาที่แอดมินทุกคนเจอ</h2>
           <p className="text-center text-muted-foreground mb-14">
             เสียเวลา เสียเงิน และสปอนเซอร์ไม่ถามหา
           </p>
@@ -174,9 +168,7 @@ export default function Landing() {
               >
                 <p.icon className="text-destructive mb-4" size={28} />
                 <h3 className="text-xl mb-2">{p.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {p.desc}
-                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
               </div>
             ))}
           </div>
@@ -187,12 +179,10 @@ export default function Landing() {
       <section id="features" className="py-24 border-t border-border">
         <div className="max-w-6xl mx-auto px-5">
           <h2 className="text-center text-3xl md:text-5xl mb-3">
-            3 AI Agents{" "}
-            <span className="text-gradient-primary">ทำงานให้ทุก 24/7</span>
+            3 AI Agents <span className="text-gradient-primary">ทำงานให้ทุก 24/7</span>
           </h2>
           <p className="text-center text-muted-foreground mb-16 max-w-2xl mx-auto">
-            ระบบ AI ออกแบบมาสำหรับชุมชนเกมไทยโดยเฉพาะ เข้าใจสแลง
-            เข้าใจวัฒนธรรม
+            ระบบ AI ออกแบบมาสำหรับชุมชนเกมไทยโดยเฉพาะ เข้าใจสแลง เข้าใจวัฒนธรรม
           </p>
           <div className="grid md:grid-cols-3 gap-6">
             {[
@@ -226,9 +216,7 @@ export default function Landing() {
                   className={`w-12 h-12 rounded-lg bg-${f.color}/10 flex items-center justify-center mb-6 group-hover:scale-110 transition`}
                 >
                   <f.icon
-                    className={
-                      f.color === "accent" ? "text-accent" : "text-primary"
-                    }
+                    className={f.color === "accent" ? "text-accent" : "text-primary"}
                     size={24}
                   />
                 </div>
@@ -238,9 +226,7 @@ export default function Landing() {
                     {f.tag}
                   </span>
                 </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {f.desc}
-                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -250,9 +236,7 @@ export default function Landing() {
       {/* HOW IT WORKS */}
       <section className="py-24 border-t border-border bg-card/30">
         <div className="max-w-6xl mx-auto px-5">
-          <h2 className="text-center text-3xl md:text-5xl mb-16">
-            เริ่มต้นใน 3 ขั้นตอน
-          </h2>
+          <h2 className="text-center text-3xl md:text-5xl mb-16">เริ่มต้นใน 3 ขั้นตอน</h2>
           <div className="grid md:grid-cols-3 gap-8 relative">
             {[
               {
@@ -300,9 +284,7 @@ export default function Landing() {
               <div className="font-display font-bold text-4xl md:text-6xl text-gradient-primary">
                 {s.v}
               </div>
-              <div className="mt-2 text-xs md:text-sm text-muted-foreground">
-                {s.l}
-              </div>
+              <div className="mt-2 text-xs md:text-sm text-muted-foreground">{s.l}</div>
             </div>
           ))}
         </div>
@@ -311,9 +293,7 @@ export default function Landing() {
       {/* PRICING */}
       <section id="pricing" className="py-24 border-t border-border">
         <div className="max-w-6xl mx-auto px-5">
-          <h2 className="text-center text-3xl md:text-5xl mb-3">
-            เลือกแพ็กเกจที่เหมาะกับชุมชน
-          </h2>
+          <h2 className="text-center text-3xl md:text-5xl mb-3">เลือกแพ็กเกจที่เหมาะกับชุมชน</h2>
           <p className="text-center text-muted-foreground mb-14">
             ไม่มี setup fee เริ่มต้นใช้งานได้เลย ยกเลิกได้ทุกเมื่อ
           </p>
@@ -368,14 +348,10 @@ export default function Landing() {
                 )}
                 <div className="text-sm text-muted-foreground">{p.name}</div>
                 <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-5xl font-display font-bold">
-                    ฿{p.price}
-                  </span>
+                  <span className="text-5xl font-display font-bold">฿{p.price}</span>
                   <span className="text-muted-foreground text-sm">/mo</span>
                 </div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  {p.size} สมาชิก
-                </div>
+                <div className="mt-1 text-xs text-muted-foreground">{p.size} สมาชิก</div>
                 <ul className="mt-6 space-y-3 text-sm">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-start gap-2">
@@ -385,10 +361,7 @@ export default function Landing() {
                   ))}
                 </ul>
                 <a href="#contact-form" className="block mt-auto pt-8">
-                  <Button
-                    variant={p.popular ? "hero" : "outline"}
-                    className="w-full"
-                  >
+                  <Button variant={p.popular ? "hero" : "outline"} className="w-full">
                     เลือกแพ็กเกจนี้
                   </Button>
                 </a>
@@ -468,12 +441,7 @@ function ContactSection() {
 
   const submit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
-    if (
-      !form.admin_name ||
-      !form.group_name ||
-      !form.platform ||
-      !form.contact
-    ) {
+    if (!form.admin_name || !form.group_name || !form.platform || !form.contact) {
       toast.error("กรุณากรอกข้อมูลให้ครบ");
       return;
     }
@@ -573,13 +541,7 @@ function ContactSection() {
               className="h-11"
             />
           </div>
-          <Button
-            type="submit"
-            variant="hero"
-            size="lg"
-            disabled={submitting}
-            className="w-full"
-          >
+          <Button type="submit" variant="hero" size="lg" disabled={submitting} className="w-full">
             {submitting ? "กำลังส่ง..." : "ส่งข้อมูล"}
           </Button>
           <p className="text-xs text-center text-muted-foreground">

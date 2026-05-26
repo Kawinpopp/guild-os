@@ -5,7 +5,10 @@ export default function NotFound() {
     <div className="flex min-h-screen items-center justify-center bg-background bg-grid px-4">
       <div className="absolute inset-0 bg-hero-glow pointer-events-none" />
       <div className="relative text-center">
-        <h1 className="font-display font-bold text-gradient-primary" style={{ fontSize: "clamp(80px, 20vw, 160px)" }}>
+        <h1
+          className="font-display font-bold text-gradient-primary"
+          style={{ fontSize: "clamp(80px, 20vw, 160px)" }}
+        >
           404
         </h1>
         <h2 className="mt-2 text-xl font-semibold text-foreground">Page not found</h2>

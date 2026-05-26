@@ -44,11 +44,8 @@ export default function Members() {
   }, [members]);
 
   const filtered = members.filter((m) => {
-    const matchSearch = m.nickname
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchPersona =
-      persona === "__all__" || m.persona_tag === persona;
+    const matchSearch = m.nickname.toLowerCase().includes(search.toLowerCase());
+    const matchPersona = persona === "__all__" || m.persona_tag === persona;
     return matchSearch && matchPersona;
   });
 
@@ -123,12 +120,8 @@ export default function Members() {
               )}
               <div>
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-muted-foreground uppercase tracking-wide">
-                    Engagement
-                  </span>
-                  <span className="font-semibold text-accent">
-                    {m.engagement_score}
-                  </span>
+                  <span className="text-muted-foreground uppercase tracking-wide">Engagement</span>
+                  <span className="font-semibold text-accent">{m.engagement_score}</span>
                 </div>
                 <div className="h-1.5 bg-background rounded-full overflow-hidden">
                   <div
@@ -144,17 +137,11 @@ export default function Members() {
 
       {selected && (
         <div className="fixed inset-0 z-50 flex">
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={() => setSelected(null)}
-          />
+          <div className="absolute inset-0 bg-black/60" onClick={() => setSelected(null)} />
           <div className="relative ml-auto w-full max-w-md h-full bg-card border-l border-border p-6 overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-display font-bold">Member Profile</h2>
-              <button
-                onClick={() => setSelected(null)}
-                className="p-2 hover:bg-muted rounded"
-              >
+              <button onClick={() => setSelected(null)} className="p-2 hover:bg-muted rounded">
                 <X size={18} />
               </button>
             </div>
@@ -171,11 +158,7 @@ export default function Members() {
 
             <div className="space-y-3 text-sm">
               <Row label="Platform" value={selected.platform_type ?? "—"} />
-              <Row
-                label="Role"
-                value={selected.role}
-                className="capitalize"
-              />
+              <Row label="Role" value={selected.role} className="capitalize" />
               <Row
                 label="Joined"
                 value={new Date(selected.joined_at).toLocaleDateString("th-TH")}
@@ -249,15 +232,7 @@ export default function Members() {
   );
 }
 
-function Row({
-  label,
-  value,
-  className,
-}: {
-  label: string;
-  value: string;
-  className?: string;
-}) {
+function Row({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
     <div className="flex items-center justify-between py-2 border-b border-border/60">
       <span className="text-muted-foreground">{label}</span>

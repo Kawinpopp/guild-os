@@ -1,6 +1,15 @@
 {
-  "/page": "app/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/webhook/[webhook_url]/route": "app/api/webhook/[webhook_url]/route.js",
   "/login/page": "app/login/page.js",
+  "/onboarding/community/page": "app/onboarding/community/page.js",
+  "/page": "app/page.js",
+  "/signup/page": "app/signup/page.js",
+  "/dashboard/members/page": "app/dashboard/members/page.js",
+  "/dashboard/member-portal/page": "app/dashboard/member-portal/page.js",
+  "/dashboard/moderation/page": "app/dashboard/moderation/page.js",
+  "/dashboard/settings/page": "app/dashboard/settings/page.js",
+  "/dashboard/insights/page": "app/dashboard/insights/page.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/dashboard/matchmaking/page": "app/dashboard/matchmaking/page.js"
 }

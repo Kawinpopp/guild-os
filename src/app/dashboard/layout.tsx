@@ -29,11 +29,7 @@ const NAV = [
   { to: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const path = usePathname();
   const { user, loading } = useAuth();
@@ -72,9 +68,7 @@ export default function DashboardLayout({
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1">
         {NAV.map((n) => {
-          const active =
-            path === n.to ||
-            (n.to !== "/dashboard" && path.startsWith(n.to));
+          const active = path === n.to || (n.to !== "/dashboard" && path.startsWith(n.to));
           return (
             <Link
               key={n.to}
@@ -99,8 +93,7 @@ export default function DashboardLayout({
           </div>
           <div className="text-sm font-semibold truncate">{community?.name}</div>
           <div className="text-[10px] text-muted-foreground">
-            {community?.platform} ·{" "}
-            {community?.member_count.toLocaleString()} members
+            {community?.platform} · {community?.member_count.toLocaleString()} members
           </div>
         </div>
       </div>
@@ -115,10 +108,7 @@ export default function DashboardLayout({
       {/* Mobile sidebar drawer */}
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={() => setMobileOpen(false)}
-          />
+          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
           <div className="relative">{Sidebar}</div>
         </div>
       )}
@@ -130,9 +120,7 @@ export default function DashboardLayout({
               <Menu size={20} />
             </button>
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-            <span className="text-sm font-semibold truncate max-w-[200px]">
-              {community?.name}
-            </span>
+            <span className="text-sm font-semibold truncate max-w-[200px]">{community?.name}</span>
           </div>
           <Button variant="ghost" size="sm" onClick={onLogout}>
             <LogOut size={14} /> ออกจากระบบ

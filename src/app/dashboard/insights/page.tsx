@@ -66,40 +66,35 @@ export default function Insights() {
 
       const since = days[0].date;
 
-      const [membersRes, postsRes, removedRes, teamsRes, topRes, countRes] =
-        await Promise.all([
-          supabase
-            .from("members")
-            .select("created_at")
-            .eq("community_id", id)
-            .gte("created_at", since),
-          supabase
-            .from("flagged_posts")
-            .select("created_at")
-            .eq("community_id", id)
-            .gte("created_at", since),
-          supabase
-            .from("flagged_posts")
-            .select("created_at")
-            .eq("community_id", id)
-            .eq("status", "removed")
-            .gte("created_at", since),
-          supabase
-            .from("teams")
-            .select("created_at")
-            .eq("community_id", id)
-            .gte("created_at", since),
-          supabase
-            .from("members")
-            .select("nickname, engagement_score, persona_tag")
-            .eq("community_id", id)
-            .order("engagement_score", { ascending: false })
-            .limit(5),
-          supabase
-            .from("members")
-            .select("id", { count: "exact", head: true })
-            .eq("community_id", id),
-        ]);
+      const [membersRes, postsRes, removedRes, teamsRes, topRes, countRes] = await Promise.all([
+        supabase
+          .from("members")
+          .select("created_at")
+          .eq("community_id", id)
+          .gte("created_at", since),
+        supabase
+          .from("flagged_posts")
+          .select("created_at")
+          .eq("community_id", id)
+          .gte("created_at", since),
+        supabase
+          .from("flagged_posts")
+          .select("created_at")
+          .eq("community_id", id)
+          .eq("status", "removed")
+          .gte("created_at", since),
+        supabase.from("teams").select("created_at").eq("community_id", id).gte("created_at", since),
+        supabase
+          .from("members")
+          .select("nickname, engagement_score, persona_tag")
+          .eq("community_id", id)
+          .order("engagement_score", { ascending: false })
+          .limit(5),
+        supabase
+          .from("members")
+          .select("id", { count: "exact", head: true })
+          .eq("community_id", id),
+      ]);
 
       const bucket = (iso: string) => {
         const d = new Date(iso);
@@ -155,9 +150,7 @@ export default function Insights() {
     <div className="space-y-8 max-w-7xl">
       <div>
         <h1 className="text-3xl mb-1">Insights</h1>
-        <p className="text-sm text-muted-foreground">
-          ภาพรวมสถิติชุมชน 7 วันล่าสุด
-        </p>
+        <p className="text-sm text-muted-foreground">ภาพรวมสถิติชุมชน 7 วันล่าสุด</p>
       </div>
 
       {/* Summary cards */}

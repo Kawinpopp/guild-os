@@ -15,7 +15,7 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: React.SyntheticEvent) => {
@@ -25,17 +25,17 @@ export default function SignupPage() {
       toast.error("กรุณากรอกข้อมูลให้ครบถ้วน");
       return;
     }
-    
+
     if (password.length < 6) {
       toast.error("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error("รหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง")
+      toast.error("รหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง");
       return;
     }
-    
+
     setBusy(true);
     const { error } = await supabase.auth.signUp({
       email,
@@ -69,11 +69,7 @@ export default function SignupPage() {
           <form onSubmit={submit} noValidate className="space-y-4">
             <div className="space-y-2">
               <Label>ชื่อแอดมิน</Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="h-11"
-              />
+              <Input value={name} onChange={(e) => setName(e.target.value)} className="h-11" />
             </div>
             <div className="space-y-2">
               <Label>Email</Label>
@@ -102,13 +98,7 @@ export default function SignupPage() {
                 className="h-11"
               />
             </div>
-            <Button
-              type="submit"
-              variant="hero"
-              size="lg"
-              disabled={busy}
-              className="w-full"
-            >
+            <Button type="submit" variant="hero" size="lg" disabled={busy} className="w-full">
               {busy ? "กำลังสมัคร..." : "สร้างบัญชี"}
             </Button>
           </form>

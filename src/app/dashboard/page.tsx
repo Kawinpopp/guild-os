@@ -73,7 +73,7 @@ export default function Overview() {
           filter: `community_id=eq.${cid}`,
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (payload) => setFeed((prev) => [payload.new as any, ...prev].slice(0, 20))
+        (payload) => setFeed((prev) => [payload.new as any, ...prev].slice(0, 20)),
       )
       .subscribe();
     return () => {
@@ -112,9 +112,7 @@ export default function Overview() {
     <div className="space-y-8 max-w-7xl">
       <div>
         <h1 className="text-3xl mb-1">Overview</h1>
-        <p className="text-sm text-muted-foreground">
-          สถานะชุมชนของคุณแบบเรียลไทม์
-        </p>
+        <p className="text-sm text-muted-foreground">สถานะชุมชนของคุณแบบเรียลไทม์</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -122,12 +120,7 @@ export default function Overview() {
           <div key={c.label} className="rounded-xl border border-border bg-card p-5">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-muted-foreground">{c.label}</span>
-              <c.icon
-                size={16}
-                className={
-                  c.color === "accent" ? "text-accent" : "text-primary"
-                }
-              />
+              <c.icon size={16} className={c.color === "accent" ? "text-accent" : "text-primary"} />
             </div>
             <div className="font-display text-3xl md:text-4xl font-bold">
               {stats.isLoading ? "..." : c.value}
@@ -141,15 +134,12 @@ export default function Overview() {
           <Activity size={16} className="text-accent" />
           <h2 className="text-lg">Live Activity</h2>
           <span className="ml-auto text-xs text-muted-foreground flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />{" "}
-            Realtime
+            <span className="w-2 h-2 rounded-full bg-accent animate-pulse" /> Realtime
           </span>
         </div>
         <ul className="divide-y divide-border">
           {feed.length === 0 && (
-            <li className="p-6 text-sm text-muted-foreground text-center">
-              ยังไม่มีกิจกรรม
-            </li>
+            <li className="p-6 text-sm text-muted-foreground text-center">ยังไม่มีกิจกรรม</li>
           )}
           {feed.map((f) => (
             <li

@@ -1,0 +1,15 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/api/webhook/[webhook_url]/route": "/api/webhook/[webhook_url]",
+  "/login/page": "/login",
+  "/onboarding/community/page": "/onboarding/community",
+  "/page": "/",
+  "/signup/page": "/signup",
+  "/dashboard/members/page": "/dashboard/members",
+  "/dashboard/member-portal/page": "/dashboard/member-portal",
+  "/dashboard/moderation/page": "/dashboard/moderation",
+  "/dashboard/settings/page": "/dashboard/settings",
+  "/dashboard/insights/page": "/dashboard/insights",
+  "/dashboard/page": "/dashboard",
+  "/dashboard/matchmaking/page": "/dashboard/matchmaking"
+}

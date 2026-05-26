@@ -67,13 +67,12 @@ export default function OnboardCommunity() {
       group_url: form.group_url || null,
     };
 
-    const { data, error } = await supabase
-      .from("communities")
-      .insert(payload)
-      .select()
-      .single();
+    const { data, error } = await supabase.from("communities").insert(payload).select().single();
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     setCommunityId(data.id);
     setWebhook(`https://api.guildos.app/webhook/${data.webhook_url}`);
     setStep(2);
@@ -115,11 +114,7 @@ export default function OnboardCommunity() {
               >
                 {step > n ? <Check size={16} /> : n}
               </div>
-              {n < 3 && (
-                <div
-                  className={`w-12 h-0.5 ${step > n ? "bg-primary" : "bg-border"}`}
-                />
-              )}
+              {n < 3 && <div className={`w-12 h-0.5 ${step > n ? "bg-primary" : "bg-border"}`} />}
             </div>
           ))}
         </div>
@@ -128,9 +123,7 @@ export default function OnboardCommunity() {
           {step === 1 && (
             <form onSubmit={saveStep1} className="space-y-5">
               <h2 className="text-2xl">ข้อมูลกลุ่มของคุณ</h2>
-              <p className="text-sm text-muted-foreground">
-                บอกเราเกี่ยวกับชุมชนเกมของคุณ
-              </p>
+              <p className="text-sm text-muted-foreground">บอกเราเกี่ยวกับชุมชนเกมของคุณ</p>
               <div className="space-y-2">
                 <Label>ชื่อกลุ่ม *</Label>
                 <Input
@@ -163,9 +156,7 @@ export default function OnboardCommunity() {
                   <Input
                     type="number"
                     value={form.member_count}
-                    onChange={(e) =>
-                      setForm({ ...form, member_count: +e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, member_count: +e.target.value })}
                     className="h-11"
                   />
                 </div>
@@ -174,9 +165,7 @@ export default function OnboardCommunity() {
                 <Label>ลิงก์กลุ่ม (ไม่บังคับ)</Label>
                 <Input
                   value={form.group_url}
-                  onChange={(e) =>
-                    setForm({ ...form, group_url: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, group_url: e.target.value })}
                   className="h-11"
                   placeholder="https://..."
                 />
@@ -197,13 +186,10 @@ export default function OnboardCommunity() {
             <div className="space-y-5">
               <h2 className="text-2xl">เชื่อมต่อ Webhook</h2>
               <p className="text-sm text-muted-foreground">
-                คัดลอก URL ด้านล่างไปตั้งค่าในแพลตฟอร์มของคุณ
-                (ทำภายหลังก็ได้)
+                คัดลอก URL ด้านล่างไปตั้งค่าในแพลตฟอร์มของคุณ (ทำภายหลังก็ได้)
               </p>
               <div className="rounded-lg border border-border bg-background p-4 flex items-center gap-3">
-                <code className="text-xs flex-1 truncate text-accent">
-                  {webhook}
-                </code>
+                <code className="text-xs flex-1 truncate text-accent">{webhook}</code>
                 <Button
                   size="sm"
                   variant="outline"
@@ -216,13 +202,10 @@ export default function OnboardCommunity() {
                 </Button>
               </div>
               <div className="rounded-lg bg-background/60 border border-border p-4 text-sm text-muted-foreground space-y-2">
-                <p className="font-semibold text-foreground">
-                  วิธีตั้งค่าสำหรับ {form.platform}:
-                </p>
+                <p className="font-semibold text-foreground">วิธีตั้งค่าสำหรับ {form.platform}:</p>
                 {form.platform === "Discord" && (
                   <p>
-                    1. ไปที่ Server Settings → Integrations → Webhooks → New
-                    Webhook
+                    1. ไปที่ Server Settings → Integrations → Webhooks → New Webhook
                     <br />
                     2. วาง URL ด้านบนใน Webhook URL
                   </p>
@@ -243,18 +226,10 @@ export default function OnboardCommunity() {
                 )}
               </div>
               <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setStep(1)}
-                  className="flex-1"
-                >
+                <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
                   ย้อนกลับ
                 </Button>
-                <Button
-                  variant="hero"
-                  onClick={() => setStep(3)}
-                  className="flex-1"
-                >
+                <Button variant="hero" onClick={() => setStep(3)} className="flex-1">
                   ถัดไป <ChevronRight size={18} />
                 </Button>
               </div>
@@ -268,17 +243,10 @@ export default function OnboardCommunity() {
               </div>
               <h2 className="text-2xl">พร้อมใช้งาน!</h2>
               <p className="text-sm text-muted-foreground">
-                เราได้สร้างชุมชน{" "}
-                <span className="text-foreground font-semibold">{form.name}</span>{" "}
+                เราได้สร้างชุมชน <span className="text-foreground font-semibold">{form.name}</span>{" "}
                 ของคุณเรียบร้อยแล้ว — เราเตรียม demo data ไว้ให้ทดลองใช้
               </p>
-              <Button
-                variant="hero"
-                size="lg"
-                onClick={finish}
-                disabled={busy}
-                className="w-full"
-              >
+              <Button variant="hero" size="lg" onClick={finish} disabled={busy} className="w-full">
                 {busy ? "กำลังเตรียม..." : "🚀 เข้าสู่ Dashboard"}
               </Button>
             </div>

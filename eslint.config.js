@@ -34,6 +34,8 @@ export default tseslint.config(
       ],
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/purity": "off",
     },
   },
   eslintPluginPrettier,

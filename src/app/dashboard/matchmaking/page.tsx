@@ -79,8 +79,7 @@ export default function Matchmaking() {
       | undefined;
     if (s?.matchmaker) {
       if (s.matchmaker.rules) setRules((prev) => ({ ...prev, ...s.matchmaker!.rules }));
-      if (typeof s.matchmaker.time_window === "number")
-        setTimeWindow(s.matchmaker.time_window);
+      if (typeof s.matchmaker.time_window === "number") setTimeWindow(s.matchmaker.time_window);
       if (s.matchmaker.rank_gap) setRankGap(s.matchmaker.rank_gap);
     }
   }, [community?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -91,24 +90,16 @@ export default function Matchmaking() {
       ...(community.settings as object),
       matchmaker: { rules, time_window: timeWindow, rank_gap: rankGap },
     };
-    await supabase
-      .from("communities")
-      .update({ settings: next })
-      .eq("id", community.id);
+    await supabase.from("communities").update({ settings: next }).eq("id", community.id);
     toast.success("บันทึกแล้ว");
   };
 
   const parseRequest = async () => {
     if (!community || !draft.trim()) return;
     const text = draft.trim();
-    const game =
-      GAMES.find((g) => text.toLowerCase().includes(g.toLowerCase())) ?? null;
-    const roleMatch = text.match(
-      /\b(mid|jungle|carry|support|tank|sup|adc|top)\b/i
-    );
-    const timeMatch = text.match(
-      /\b(\d{1,2}[:.]\d{2}|\d{1,2}\s*(?:ทุ่ม|โมง|am|pm))\b/i
-    );
+    const game = GAMES.find((g) => text.toLowerCase().includes(g.toLowerCase())) ?? null;
+    const roleMatch = text.match(/\b(mid|jungle|carry|support|tank|sup|adc|top)\b/i);
+    const timeMatch = text.match(/\b(\d{1,2}[:.]\d{2}|\d{1,2}\s*(?:ทุ่ม|โมง|am|pm))\b/i);
     await supabase.from("match_requests").insert({
       community_id: community.id,
       raw_text: text,
@@ -128,12 +119,10 @@ export default function Matchmaking() {
     toast.info("🤖 กำลังจับคู่...");
     setTimeout(async () => {
       if (requests.length >= 3) {
-        const players = requests
-          .slice(0, 3)
-          .map((r) => ({
-            nick: "Player" + Math.floor(Math.random() * 99),
-            style: r.role || "Flex",
-          }));
+        const players = requests.slice(0, 3).map((r) => ({
+          nick: "Player" + Math.floor(Math.random() * 99),
+          style: r.role || "Flex",
+        }));
         const game = requests[0].game || "ROV";
         await supabase.from("teams").insert({
           community_id: community.id,
@@ -180,9 +169,7 @@ export default function Matchmaking() {
                   min={1}
                   max={10}
                   value={rules[g] ?? 5}
-                  onChange={(e) =>
-                    setRules({ ...rules, [g]: Number(e.target.value) || 1 })
-                  }
+                  onChange={(e) => setRules({ ...rules, [g]: Number(e.target.value) || 1 })}
                   className="w-20 h-10"
                 />
                 <span className="text-xs text-muted-foreground">คน</span>
@@ -233,9 +220,7 @@ export default function Matchmaking() {
         <div className="flex items-center gap-2 mb-1">
           <Bot size={18} className="text-primary" />
           <h2 className="text-lg">เพิ่ม Match Request</h2>
-          <span className="text-xs text-muted-foreground ml-1">
-            AI parse ให้อัตโนมัติ
-          </span>
+          <span className="text-xs text-muted-foreground ml-1">AI parse ให้อัตโนมัติ</span>
         </div>
         <div className="flex gap-2 mt-3">
           <Input
@@ -261,9 +246,7 @@ export default function Matchmaking() {
           </div>
           <div className="divide-y divide-border max-h-[500px] overflow-y-auto">
             {requests.length === 0 && (
-              <div className="p-6 text-sm text-center text-muted-foreground">
-                ไม่มีคำขอ
-              </div>
+              <div className="p-6 text-sm text-center text-muted-foreground">ไม่มีคำขอ</div>
             )}
             {requests.map((r) => (
               <div key={r.id} className="p-4">
@@ -304,9 +287,7 @@ export default function Matchmaking() {
           </div>
           <div className="divide-y divide-border max-h-[500px] overflow-y-auto">
             {teams.length === 0 && (
-              <div className="p-6 text-sm text-center text-muted-foreground">
-                ยังไม่มีทีม
-              </div>
+              <div className="p-6 text-sm text-center text-muted-foreground">ยังไม่มีทีม</div>
             )}
             {teams.map((t) => (
               <div key={t.id} className="p-4">
@@ -329,8 +310,7 @@ export default function Matchmaking() {
                       key={i}
                       className="text-xs px-2 py-1 rounded bg-background border border-border"
                     >
-                      {p.nick}{" "}
-                      <span className="text-muted-foreground">· {p.style}</span>
+                      {p.nick} <span className="text-muted-foreground">· {p.style}</span>
                     </span>
                   ))}
                 </div>
@@ -346,17 +326,12 @@ export default function Matchmaking() {
         </div>
         <div className="divide-y divide-border">
           {teams.length === 0 && (
-            <div className="p-6 text-sm text-center text-muted-foreground">
-              ยังไม่มีประวัติ
-            </div>
+            <div className="p-6 text-sm text-center text-muted-foreground">ยังไม่มีประวัติ</div>
           )}
           {teams.slice(0, 10).map((t) => {
             const d = new Date(t.created_at);
             return (
-              <div
-                key={t.id}
-                className="px-5 py-3 grid grid-cols-5 items-center text-sm gap-3"
-              >
+              <div key={t.id} className="px-5 py-3 grid grid-cols-5 items-center text-sm gap-3">
                 <span className="text-muted-foreground">
                   {d.toLocaleDateString("th-TH", {
                     day: "2-digit",
