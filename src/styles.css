@@ -1,0 +1,169 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap');
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+  GuildOS Design System
+  - Background: #0F0F14 / Surface: #1A1A24
+  - Accent purple: #7C5CFC / Accent green: #00E5A0
+  - Headings: Rajdhani / Body: IBM Plex Sans Thai
+*/
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-display: 'Rajdhani', system-ui, sans-serif;
+  --font-body: 'IBM Plex Sans Thai', system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.625rem;
+
+  /* GuildOS Dark — single theme */
+  --background: oklch(0.155 0.018 280);          /* #0F0F14 */
+  --foreground: oklch(0.96 0.005 280);
+  --card: oklch(0.20 0.022 280);                 /* #1A1A24 */
+  --card-foreground: oklch(0.96 0.005 280);
+  --popover: oklch(0.22 0.025 280);
+  --popover-foreground: oklch(0.96 0.005 280);
+
+  --primary: oklch(0.65 0.22 290);               /* #7C5CFC purple */
+  --primary-foreground: oklch(0.98 0.005 280);
+  --primary-glow: oklch(0.75 0.20 290);
+
+  --secondary: oklch(0.28 0.025 280);
+  --secondary-foreground: oklch(0.96 0.005 280);
+
+  --muted: oklch(0.25 0.020 280);
+  --muted-foreground: oklch(0.68 0.025 280);
+
+  --accent: oklch(0.78 0.18 165);                /* #00E5A0 green */
+  --accent-foreground: oklch(0.15 0.02 280);
+
+  --success: oklch(0.78 0.18 165);
+  --success-foreground: oklch(0.12 0.02 280);
+  --warning: oklch(0.78 0.16 75);
+  --warning-foreground: oklch(0.12 0.02 280);
+  --destructive: oklch(0.62 0.24 25);
+  --destructive-foreground: oklch(0.98 0.005 280);
+
+  --border: oklch(0.30 0.022 280);
+  --input: oklch(0.25 0.022 280);
+  --ring: oklch(0.65 0.22 290);
+
+  --chart-1: oklch(0.65 0.22 290);
+  --chart-2: oklch(0.78 0.18 165);
+  --chart-3: oklch(0.72 0.18 320);
+  --chart-4: oklch(0.78 0.16 75);
+  --chart-5: oklch(0.65 0.20 220);
+
+  --sidebar: oklch(0.18 0.02 280);
+  --sidebar-foreground: oklch(0.92 0.008 280);
+  --sidebar-primary: oklch(0.65 0.22 290);
+  --sidebar-primary-foreground: oklch(0.98 0.005 280);
+  --sidebar-accent: oklch(0.26 0.022 280);
+  --sidebar-accent-foreground: oklch(0.96 0.005 280);
+  --sidebar-border: oklch(0.28 0.022 280);
+  --sidebar-ring: oklch(0.65 0.22 290);
+
+  --gradient-primary: linear-gradient(135deg, oklch(0.65 0.22 290), oklch(0.55 0.24 305));
+  --gradient-hero: radial-gradient(ellipse at top, oklch(0.30 0.10 290 / 0.4), transparent 60%);
+  --gradient-success: linear-gradient(135deg, oklch(0.78 0.18 165), oklch(0.70 0.18 195));
+  --shadow-glow: 0 0 40px oklch(0.65 0.22 290 / 0.35);
+  --shadow-elegant: 0 10px 40px -10px oklch(0.05 0 0 / 0.6);
+}
+
+/* Force dark — only theme */
+html { color-scheme: dark; }
+
+@layer base {
+  * { border-color: var(--color-border); }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* Subtle grid background */
+  .bg-grid {
+    background-image:
+      linear-gradient(oklch(0.30 0.022 280 / 0.4) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.30 0.022 280 / 0.4) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .bg-hero-glow {
+    background-image: var(--gradient-hero);
+  }
+
+  .text-gradient-primary {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .glow-primary { box-shadow: var(--shadow-glow); }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--card); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }
+}
+
+@media print {
+  body { background: white !important; color: black !important; }
+  .no-print { display: none !important; }
+}
