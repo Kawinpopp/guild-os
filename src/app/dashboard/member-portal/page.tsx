@@ -8,31 +8,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Copy, ExternalLink, Trophy, Swords, Users } from "lucide-react";
 
-type Team = {
+type MatchItem = {
   id: string;
   game: string;
-  scheduled_time: string | null;
-  players: { nick: string; style: string }[];
-  outcome: string | null;
-  created_at: string;
+  match_score: number;
+  status: string;
+  requested_at: string;
+  requester: { display_name: string } | null;
+  matched_user: { display_name: string } | null;
 };
 
 type TopMember = {
-  nickname: string;
-  engagement_score: number;
-  persona_tag: string | null;
   role: string;
+  joined_at: string;
+  users: { display_name: string; platform_type: string; last_active_at: string | null } | null;
 };
 
 export default function MemberPortal() {
   const { data: community } = useCommunity();
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [matches, setMatches] = useState<MatchItem[]>([]);
   const [top, setTop] = useState<TopMember[]>([]);
-  const [draft, setDraft] = useState("");
 
   const portalUrl =
     typeof window !== "undefined"
-      ? `${window.location.origin}/portal/${community?.webhook_url ?? ""}`
+      ? `${window.location.origin}/portal/${community?.platform_group_id ?? ""}`
       : "";
 
   useEffect(() => {
@@ -40,60 +39,41 @@ export default function MemberPortal() {
     const id = community.id;
     Promise.all([
       supabase
-        .from("teams")
-        .select("*")
+        .from("matches")
+        .select(`
+          id, game, match_score, status, requested_at,
+          requester:users!matches_requester_id_fkey(display_name),
+          matched_user:users!matches_matched_user_id_fkey(display_name)
+        `)
         .eq("community_id", id)
-        .order("created_at", { ascending: false })
+        .order("requested_at", { ascending: false })
         .limit(10),
       supabase
-        .from("members")
-        .select("nickname, engagement_score, persona_tag, role")
+        .from("community_members")
+        .select("role, joined_at, users(display_name, platform_type, last_active_at)")
         .eq("community_id", id)
-        .order("engagement_score", { ascending: false })
+        .eq("is_active", true)
+        .order("joined_at", { ascending: true })
         .limit(10),
-    ]).then(([t, m]) => {
-      setTeams((t.data ?? []) as unknown as Team[]);
-      setTop((m.data ?? []) as TopMember[]);
+    ]).then(([m, cm]) => {
+      setMatches((m.data ?? []) as unknown as MatchItem[]);
+      setTop((cm.data ?? []) as unknown as TopMember[]);
     });
   }, [community]);
 
-  const submitRequest = async () => {
-    if (!community || !draft.trim()) return;
-    const text = draft.trim();
-    const GAMES = ["ROV", "MLBB", "Valorant", "PUBG Mobile", "LoL Wild Rift"];
-    const game = GAMES.find((g) => text.toLowerCase().includes(g.toLowerCase())) ?? null;
-    const roleMatch = text.match(/\b(mid|jungle|carry|support|tank|sup|adc|top)\b/i);
-    const timeMatch = text.match(/\b(\d{1,2}[:.]\d{2}|\d{1,2}\s*(?:ทุ่ม|โมง|am|pm))\b/i);
-    await supabase.from("match_requests").insert({
-      community_id: community.id,
-      raw_text: text,
-      game,
-      role: roleMatch?.[1] ?? null,
-      time_window: timeMatch?.[0] ?? null,
-      parse_confidence: game ? 0.85 : 0.5,
-      status: "pending",
-    });
-    setDraft("");
-    toast.success("ส่งคำขอแล้ว — AI จะจับคู่ให้เร็วๆ นี้");
+  const STATUS_COLOR: Record<string, string> = {
+    pending: "bg-warning/15 text-warning",
+    accepted: "bg-accent/15 text-accent",
+    rejected: "bg-destructive/15 text-destructive",
+    expired: "bg-muted text-muted-foreground",
   };
-
-  const tierOf = (s: number) =>
-    s >= 85 ? "Diamond" : s >= 65 ? "Gold" : s >= 40 ? "Silver" : "Bronze";
-  const tierColor = (s: number) =>
-    s >= 85
-      ? "bg-primary/15 text-primary"
-      : s >= 65
-        ? "bg-warning/15 text-warning"
-        : s >= 40
-          ? "bg-muted-foreground/15 text-muted-foreground"
-          : "bg-destructive/15 text-destructive";
 
   return (
     <div className="space-y-8 max-w-5xl">
       <div>
         <h1 className="text-3xl mb-1">Member Portal</h1>
         <p className="text-sm text-muted-foreground">
-          ลิงก์สาธารณะสำหรับสมาชิกชุมชน — แชร์ให้สมาชิกสมัครและขอจับคู่เกมได้เลย
+          ลิงก์สาธารณะสำหรับสมาชิกชุมชน — แชร์ให้สมาชิกดูทีมและ leaderboard ได้เลย
         </p>
       </div>
 
@@ -104,8 +84,7 @@ export default function MemberPortal() {
           <h2 className="text-lg">ลิงก์ Portal สาธารณะ</h2>
         </div>
         <p className="text-sm text-muted-foreground">
-          แชร์ลิงก์นี้ให้สมาชิก — พวกเขาสามารถดูทีม, leaderboard และขอ match request
-          ได้โดยไม่ต้องล็อกอิน
+          แชร์ลิงก์นี้ให้สมาชิก — พวกเขาสามารถดูผลการจับคู่และ leaderboard ได้โดยไม่ต้องล็อกอิน
         </p>
         <div className="flex gap-2">
           <Input value={portalUrl} readOnly className="h-11 font-mono text-xs bg-background/40" />
@@ -124,125 +103,93 @@ export default function MemberPortal() {
         </div>
       </div>
 
-      {/* Quick match request */}
-      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-        <div className="flex items-center gap-2">
-          <Swords size={16} className="text-primary" />
-          <h2 className="text-lg">ส่ง Match Request (ทดสอบ)</h2>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          ทดสอบส่งคำขอในฐานะสมาชิก — AI จะ parse เกม/role/เวลาให้อัตโนมัติ
-        </p>
-        <div className="flex gap-2">
-          <Input
-            placeholder="เช่น 'หาทีม ROV 3 ทุ่ม สายขาน' หรือ 'MLBB mid tonight 9pm'"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && submitRequest()}
-            className="h-11"
-          />
-          <Button variant="hero" onClick={submitRequest} disabled={!draft.trim()}>
-            ส่ง
-          </Button>
-        </div>
-      </div>
-
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Active teams */}
+        {/* Recent matches */}
         <div className="rounded-xl border border-border bg-card">
           <div className="p-5 border-b border-border flex items-center gap-2">
             <Swords size={15} className="text-accent" />
-            <h2 className="text-lg">ทีมล่าสุด</h2>
+            <h2 className="text-lg">การจับคู่ล่าสุด</h2>
             <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent font-semibold">
-              {teams.length}
+              {matches.length}
             </span>
           </div>
           <div className="divide-y divide-border max-h-[360px] overflow-y-auto">
-            {teams.length === 0 && (
-              <div className="p-8 text-sm text-center text-muted-foreground">ยังไม่มีทีม</div>
+            {matches.length === 0 && (
+              <div className="p-8 text-sm text-center text-muted-foreground">ยังไม่มีการจับคู่</div>
             )}
-            {teams.map((t) => (
-              <div key={t.id} className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">{t.game}</span>
+            {matches.map((m) => (
+              <div key={m.id} className="p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-semibold text-sm">{m.game}</span>
                   <span
-                    className={`text-[10px] px-2 py-0.5 rounded font-semibold ${
-                      t.outcome === "cancelled"
-                        ? "bg-destructive/15 text-destructive"
-                        : "bg-accent/15 text-accent"
-                    }`}
+                    className={`text-[10px] px-2 py-0.5 rounded font-semibold capitalize ${STATUS_COLOR[m.status] ?? ""}`}
                   >
-                    {t.outcome === "cancelled" ? "ยกเลิก" : "สำเร็จ"}
+                    {m.status}
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {(t.players ?? []).map((p, i) => (
-                    <span
-                      key={i}
-                      className="text-xs px-2 py-0.5 rounded bg-background border border-border"
-                    >
-                      {p.nick}
-                      <span className="text-muted-foreground"> · {p.style}</span>
-                    </span>
-                  ))}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                  <span>{m.requester?.display_name ?? "—"}</span>
+                  <span className="text-xs">vs</span>
+                  <span>{m.matched_user?.display_name ?? "—"}</span>
                 </div>
-                {t.scheduled_time && (
+                <div className="flex items-center justify-between">
                   <span className="text-[10px] text-muted-foreground">
-                    {new Date(t.scheduled_time).toLocaleString("th-TH", {
+                    {new Date(m.requested_at).toLocaleString("th-TH", {
                       day: "2-digit",
                       month: "short",
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
                   </span>
-                )}
+                  <span className="text-xs font-bold text-primary">
+                    {(m.match_score * 100).toFixed(0)}%
+                  </span>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Leaderboard */}
+        {/* Leaderboard — longest-standing active members */}
         <div className="rounded-xl border border-border bg-card">
           <div className="p-5 border-b border-border flex items-center gap-2">
             <Trophy size={15} className="text-warning" />
-            <h2 className="text-lg">Leaderboard</h2>
-            <span className="ml-auto text-xs text-muted-foreground">Top 10</span>
+            <h2 className="text-lg">OG Members</h2>
+            <span className="ml-auto text-xs text-muted-foreground">สมาชิกเก่าสุด 10 คน</span>
           </div>
           <ul className="divide-y divide-border">
             {top.length === 0 && (
               <li className="p-8 text-sm text-center text-muted-foreground">ยังไม่มีสมาชิก</li>
             )}
-            {top.map((m, i) => (
-              <li key={m.nickname} className="px-5 py-3 flex items-center gap-3">
-                <span
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
-                    i === 0
-                      ? "bg-warning/20 text-warning"
-                      : i === 1
-                        ? "bg-muted-foreground/15 text-muted-foreground"
-                        : i === 2
-                          ? "bg-orange-700/15 text-orange-400"
-                          : "bg-background border border-border text-muted-foreground"
-                  }`}
-                >
-                  {i + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold truncate">{m.nickname}</div>
-                  <div className="text-[10px] text-muted-foreground">{m.persona_tag ?? m.role}</div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
+            {top.map((m, i) => {
+              const name = m.users?.display_name ?? "—";
+              return (
+                <li key={i} className="px-5 py-3 flex items-center gap-3">
                   <span
-                    className={`text-[10px] px-2 py-0.5 rounded font-semibold ${tierColor(m.engagement_score)}`}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
+                      i === 0
+                        ? "bg-warning/20 text-warning"
+                        : i === 1
+                          ? "bg-muted-foreground/15 text-muted-foreground"
+                          : i === 2
+                            ? "bg-orange-700/15 text-orange-400"
+                            : "bg-background border border-border text-muted-foreground"
+                    }`}
                   >
-                    {tierOf(m.engagement_score)}
+                    {i + 1}
                   </span>
-                  <span className="text-xs font-bold text-primary w-8 text-right">
-                    {m.engagement_score}
-                  </span>
-                </div>
-              </li>
-            ))}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold truncate">{name}</div>
+                    <div className="text-[10px] text-muted-foreground capitalize">
+                      {m.role} · {m.users?.platform_type ?? "—"}
+                    </div>
+                  </div>
+                  <div className="text-[10px] text-muted-foreground shrink-0">
+                    joined {new Date(m.joined_at).toLocaleDateString("th-TH", { day: "2-digit", month: "short" })}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
@@ -260,11 +207,11 @@ export default function MemberPortal() {
           </div>
           <div className="rounded-lg bg-background/60 border border-border p-4">
             <div className="text-xs text-muted-foreground mb-1">แพลตฟอร์ม</div>
-            <div className="font-semibold">{community?.platform ?? "—"}</div>
+            <div className="font-semibold capitalize">{community?.platform ?? "—"}</div>
           </div>
           <div className="rounded-lg bg-background/60 border border-border p-4">
             <div className="text-xs text-muted-foreground mb-1">จำนวนสมาชิก</div>
-            <div className="font-semibold">{community?.member_count.toLocaleString() ?? "—"}</div>
+            <div className="font-semibold">{community?.total_members.toLocaleString() ?? "—"}</div>
           </div>
         </div>
       </div>

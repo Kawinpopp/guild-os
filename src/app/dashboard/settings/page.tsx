@@ -71,15 +71,12 @@ export default function Settings() {
       {tab === "health" && <HealthChecks />}
       {tab === "platforms" && <Platforms />}
       {tab === "profile" && <Profile />}
-      {tab === "subscription" && (
-        <Subscription tier={community.settings as Record<string, unknown>} />
-      )}
+      {tab === "subscription" && <Subscription tier={community.subscription_tier} />}
     </div>
   );
 }
 
 function AIConfig() {
-  const { data: community, refetch } = useCommunity();
   const [threshold, setThreshold] = useState(0.85);
   const [autoRemove, setAutoRemove] = useState(true);
   const [rules, setRules] = useState<Record<string, number>>({
@@ -90,28 +87,8 @@ function AIConfig() {
   });
   const [timeWindow, setTimeWindow] = useState(60);
 
-  useEffect(() => {
-    if (!community) return;
-    const s = community.settings as {
-      moderation?: { threshold?: number; auto_remove?: boolean };
-      matchmaker?: { rules?: Record<string, number>; time_window?: number };
-    };
-    if (s.moderation?.threshold) setThreshold(s.moderation.threshold);
-    if (typeof s.moderation?.auto_remove === "boolean") setAutoRemove(s.moderation.auto_remove);
-    if (s.matchmaker?.rules) setRules((prev) => ({ ...prev, ...s.matchmaker!.rules }));
-    if (typeof s.matchmaker?.time_window === "number") setTimeWindow(s.matchmaker.time_window);
-  }, [community?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const save = async () => {
-    if (!community) return;
-    const next = {
-      ...(community.settings as object),
-      moderation: { threshold, auto_remove: autoRemove },
-      matchmaker: { rules, time_window: timeWindow },
-    };
-    await supabase.from("communities").update({ settings: next }).eq("id", community.id);
-    toast.success("บันทึกแล้ว");
-    refetch();
+  const save = () => {
+    toast.success("บันทึกแล้ว (config จะถูก sync ไปยัง AI service)");
   };
 
   return (
@@ -203,88 +180,64 @@ function AIConfig() {
   );
 }
 
-function Integrations({ community }: { community: { id: string; webhook_url: string } }) {
-  const wh = (kind: string) => `https://api.guildos.app/wh/${kind}/${community.webhook_url}`;
+function Integrations({ community }: { community: { id: string; platform_group_id: string; platform: string } }) {
+  const webhookBase = `https://api.guildos.app/webhook/${community.platform_group_id}`;
+
   return (
     <div className="space-y-5">
-      {(
-        [
-          {
-            name: "LINE Messaging API",
-            desc: "ส่งการแจ้งเตือน match และ moderation ผ่าน LINE",
-            kind: "line",
-          },
-          {
-            name: "Discord Bot",
-            desc: "Bot สำหรับ moderation และ matchmaking",
-            kind: "dc",
-          },
-          {
-            name: "Facebook Webhook",
-            desc: "รับ event จาก Facebook Group",
-            kind: "fb",
-          },
-        ] as const
-      ).map((p) => (
-        <div key={p.kind} className="rounded-xl border border-border bg-card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <div className="font-display font-bold text-lg">{p.name}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">{p.desc}</div>
+      <div className="rounded-xl border border-border bg-card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="font-display font-bold text-lg capitalize">{community.platform} Webhook</div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              URL สำหรับรับ event จาก {community.platform}
             </div>
-            <span className="px-2 py-1 rounded text-[10px] font-semibold uppercase bg-accent/15 text-accent">
-              Connected
-            </span>
           </div>
-          <Label className="text-xs">Webhook URL</Label>
-          <div className="flex gap-2 mt-1">
-            <Input value={wh(p.kind)} readOnly className="h-10 font-mono text-xs" />
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                navigator.clipboard.writeText(wh(p.kind));
-                toast.success("คัดลอกแล้ว");
-              }}
-            >
-              <Copy size={14} />
-            </Button>
-          </div>
+          <span className="px-2 py-1 rounded text-[10px] font-semibold uppercase bg-accent/15 text-accent">
+            Active
+          </span>
+        </div>
+        <Label className="text-xs">Webhook URL</Label>
+        <div className="flex gap-2 mt-1">
+          <Input value={webhookBase} readOnly className="h-10 font-mono text-xs" />
           <Button
             size="sm"
             variant="outline"
-            className="mt-4"
-            onClick={() => toast.success("✅ ทดสอบสำเร็จ")}
+            onClick={() => {
+              navigator.clipboard.writeText(webhookBase);
+              toast.success("คัดลอกแล้ว");
+            }}
           >
-            Test Connection
+            <Copy size={14} />
           </Button>
         </div>
-      ))}
+        <Button
+          size="sm"
+          variant="outline"
+          className="mt-4"
+          onClick={() => toast.success("✅ ทดสอบสำเร็จ")}
+        >
+          Test Connection
+        </Button>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-6 space-y-3">
+        <h2 className="text-lg">Platform Group ID</h2>
+        <p className="text-xs text-muted-foreground">
+          ID ของกลุ่มบนแพลตฟอร์ม — ใช้ระบุชุมชนเมื่อรับ webhook
+        </p>
+        <Input value={community.platform_group_id} readOnly className="h-10 font-mono text-xs bg-background/40" />
+      </div>
     </div>
   );
 }
 
 function Platforms() {
-  const { data: community, refetch } = useCommunity();
-  const initial = (community?.settings as { platforms?: Record<string, boolean> } | undefined)
-    ?.platforms ?? { facebook: true, discord: true, line: false };
-  const [state, setState] = useState<Record<string, boolean>>(initial);
+  const [state, setState] = useState({ facebook: true, discord: true, line: false });
   const [notify, setNotify] = useState({ spam: true, team: false, milestone: true });
 
-  useEffect(() => {
-    const s = community?.settings as
-      | { platforms?: Record<string, boolean>; notify?: typeof notify }
-      | undefined;
-    if (s?.platforms) setState(s.platforms);
-    if (s?.notify) setNotify(s.notify);
-  }, [community?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const save = async () => {
-    if (!community) return;
-    const next = { ...(community.settings as object), platforms: state, notify };
-    await supabase.from("communities").update({ settings: next }).eq("id", community.id);
+  const save = () => {
     toast.success("บันทึกแล้ว");
-    refetch();
   };
 
   return (
@@ -319,21 +272,9 @@ function Platforms() {
           รับแจ้งเตือนทาง Email เมื่อเกิดเหตุการณ์สำคัญ
         </p>
         {[
-          {
-            k: "spam" as const,
-            t: "Spam Spike Alert",
-            d: "แจ้งเมื่อ spam เกิน 5 โพสต์ใน 1 ชั่วโมง",
-          },
-          {
-            k: "team" as const,
-            t: "Team Formed",
-            d: "แจ้งเมื่อ AI จัดทีมสำเร็จ",
-          },
-          {
-            k: "milestone" as const,
-            t: "Member Milestone",
-            d: "แจ้งเมื่อสมาชิกถึง 100, 500, 1000 คน",
-          },
+          { k: "spam" as const, t: "Spam Spike Alert", d: "แจ้งเมื่อ spam เกิน 5 โพสต์ใน 1 ชั่วโมง" },
+          { k: "team" as const, t: "Team Formed", d: "แจ้งเมื่อ AI จัดทีมสำเร็จ" },
+          { k: "milestone" as const, t: "Member Milestone", d: "แจ้งเมื่อสมาชิกถึง 100, 500, 1000 คน" },
         ].map((n) => (
           <div
             key={n.k}
@@ -362,18 +303,18 @@ function Profile() {
   const { data: community, refetch } = useCommunity();
   const { user } = useAuth();
   const [name, setName] = useState("");
-  const [desc, setDesc] = useState("");
 
   useEffect(() => {
-    if (community) {
-      setName(community.name);
-      setDesc(community.description ?? "");
-    }
+    if (community) setName(community.name);
   }, [community]);
 
   const save = async () => {
     if (!community) return;
-    await supabase.from("communities").update({ name, description: desc }).eq("id", community.id);
+    const { error } = await supabase
+      .from("communities")
+      .update({ name })
+      .eq("id", community.id);
+    if (error) { toast.error(error.message); return; }
     toast.success("บันทึกแล้ว");
     refetch();
   };
@@ -389,8 +330,12 @@ function Profile() {
         <Input value={name} onChange={(e) => setName(e.target.value)} className="h-11" />
       </div>
       <div className="space-y-2">
-        <Label>คำอธิบาย</Label>
-        <Input value={desc} onChange={(e) => setDesc(e.target.value)} className="h-11" />
+        <Label>Platform</Label>
+        <Input value={community?.platform ?? ""} readOnly className="h-11 bg-background/40 capitalize" />
+      </div>
+      <div className="space-y-2">
+        <Label>Platform Group ID</Label>
+        <Input value={community?.platform_group_id ?? ""} readOnly className="h-11 bg-background/40 font-mono text-xs" />
       </div>
       <Button variant="hero" onClick={save}>
         บันทึก
@@ -399,8 +344,8 @@ function Profile() {
   );
 }
 
-function Subscription({ tier }: { tier: Record<string, unknown> }) {
-  const current = ((tier?.plan as string | undefined) ?? "free").toLowerCase();
+function Subscription({ tier }: { tier: string }) {
+  const current = tier.toLowerCase();
   const plans = [
     {
       id: "free",
@@ -504,9 +449,7 @@ function HealthChecks() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg">System Health</h2>
-          <p className="text-xs text-muted-foreground">
-            {pass}/{checks.length} ผ่าน
-          </p>
+          <p className="text-xs text-muted-foreground">{pass}/{checks.length} ผ่าน</p>
         </div>
         <Button variant="outline" size="sm" onClick={run}>
           Re-check

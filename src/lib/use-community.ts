@@ -15,7 +15,7 @@ export function useCommunity() {
       const { data } = await supabase
         .from("communities")
         .select("*")
-        .eq("admin_id", user.id)
+        .eq("admin_auth_id", user.id)
         .maybeSingle();
       return (data as unknown as Community) ?? null;
     },

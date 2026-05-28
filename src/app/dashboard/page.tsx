@@ -6,6 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCommunity } from "@/lib/use-community";
 import { Users, Shield, MessageCircle, Swords, Activity } from "lucide-react";
 
+type FeedItem = {
+  id: string;
+  label: string;
+  action_taken: string;
+  confidence_score: number;
+  created_at: string;
+  users: { display_name: string } | null;
+};
+
 export default function Overview() {
   const { data: community } = useCommunity();
   const cid = community?.id;
@@ -18,50 +27,53 @@ export default function Overview() {
       today.setHours(0, 0, 0, 0);
       const isoToday = today.toISOString();
       const id = cid!;
-      const [members, posts, removed, teams] = await Promise.all([
+      const [members, posts, blocked, matches] = await Promise.all([
         supabase
-          .from("members")
+          .from("community_members")
           .select("id", { count: "exact", head: true })
-          .eq("community_id", id),
+          .eq("community_id", id)
+          .eq("is_active", true),
         supabase
-          .from("flagged_posts")
+          .from("posts")
           .select("id", { count: "exact", head: true })
           .eq("community_id", id)
           .gte("created_at", isoToday),
         supabase
-          .from("flagged_posts")
+          .from("moderation_logs")
           .select("id", { count: "exact", head: true })
           .eq("community_id", id)
-          .eq("status", "removed")
+          .eq("action_taken", "remove")
           .gte("created_at", isoToday),
         supabase
-          .from("teams")
+          .from("matches")
           .select("id", { count: "exact", head: true })
           .eq("community_id", id)
-          .gte("created_at", isoToday),
+          .gte("requested_at", isoToday),
       ]);
       return {
         members: members.count ?? 0,
         posts: posts.count ?? 0,
-        removed: removed.count ?? 0,
-        teams: teams.count ?? 0,
+        blocked: blocked.count ?? 0,
+        matches: matches.count ?? 0,
       };
     },
   });
 
-  const [feed, setFeed] = useState<
-    Array<{ id: string; type: string; message: string; created_at: string }>
-  >([]);
+  const [feed, setFeed] = useState<FeedItem[]>([]);
+
+  const loadFeed = (id: string) =>
+    supabase
+      .from("moderation_logs")
+      .select("id, label, action_taken, confidence_score, created_at, users(display_name)")
+      .eq("community_id", id)
+      .order("created_at", { ascending: false })
+      .limit(20)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .then(({ data }) => setFeed((data ?? []) as any));
 
   useEffect(() => {
     if (!cid) return;
-    supabase
-      .from("activity_feed")
-      .select("*")
-      .eq("community_id", cid)
-      .order("created_at", { ascending: false })
-      .limit(20)
-      .then(({ data }) => setFeed(data ?? []));
+    loadFeed(cid);
     const channel = supabase
       .channel(`feed-${cid}`)
       .on(
@@ -69,11 +81,10 @@ export default function Overview() {
         {
           event: "INSERT",
           schema: "public",
-          table: "activity_feed",
+          table: "moderation_logs",
           filter: `community_id=eq.${cid}`,
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (payload) => setFeed((prev) => [payload.new as any, ...prev].slice(0, 20)),
+        () => loadFeed(cid),
       )
       .subscribe();
     return () => {
@@ -81,31 +92,23 @@ export default function Overview() {
     };
   }, [cid]);
 
+  const feedMessage = (f: FeedItem) => {
+    const name = f.users?.display_name ?? "unknown";
+    const score = (f.confidence_score * 100).toFixed(0);
+    const actionEmoji: Record<string, string> = {
+      remove: "🛡",
+      warn: "⚠️",
+      mute: "🔇",
+      pass: "✅",
+    };
+    return `${actionEmoji[f.action_taken] ?? "🤖"} AI ${f.action_taken} — ${f.label} (${score}%) from ${name}`;
+  };
+
   const cards = [
-    {
-      label: "Active Members",
-      value: stats.data?.members ?? "—",
-      icon: Users,
-      color: "primary",
-    },
-    {
-      label: "Posts Today",
-      value: stats.data?.posts ?? "—",
-      icon: MessageCircle,
-      color: "accent",
-    },
-    {
-      label: "Spam Blocked Today",
-      value: stats.data?.removed ?? "—",
-      icon: Shield,
-      color: "primary",
-    },
-    {
-      label: "Matches Today",
-      value: stats.data?.teams ?? "—",
-      icon: Swords,
-      color: "accent",
-    },
+    { label: "Active Members", value: stats.data?.members ?? "—", icon: Users, color: "primary" },
+    { label: "Posts Today", value: stats.data?.posts ?? "—", icon: MessageCircle, color: "accent" },
+    { label: "Spam Blocked Today", value: stats.data?.blocked ?? "—", icon: Shield, color: "primary" },
+    { label: "Matches Today", value: stats.data?.matches ?? "—", icon: Swords, color: "accent" },
   ];
 
   return (
@@ -132,7 +135,7 @@ export default function Overview() {
       <div className="rounded-xl border border-border bg-card">
         <div className="p-5 border-b border-border flex items-center gap-2">
           <Activity size={16} className="text-accent" />
-          <h2 className="text-lg">Live Activity</h2>
+          <h2 className="text-lg">Live Moderation Feed</h2>
           <span className="ml-auto text-xs text-muted-foreground flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" /> Realtime
           </span>
@@ -146,8 +149,8 @@ export default function Overview() {
               key={f.id}
               className="px-5 py-3 flex items-center justify-between text-sm hover:bg-background/40"
             >
-              <span>{f.message}</span>
-              <span className="text-xs text-muted-foreground">
+              <span>{feedMessage(f)}</span>
+              <span className="text-xs text-muted-foreground shrink-0 ml-4">
                 {new Date(f.created_at).toLocaleTimeString("th-TH", {
                   hour: "2-digit",
                   minute: "2-digit",

@@ -23,14 +23,15 @@ export async function POST(
   { params }: { params: Promise<{ webhook_url: string }> },
 ) {
   const { webhook_url } = await params;
+  const supabase = getSupabase();
 
-  const { data: community, error } = await getSupabase()
+  const { data: community, error: communityError } = await supabase
     .from("communities")
     .select("id, platform")
-    .eq("webhook_url", webhook_url)
+    .eq("platform_group_id", webhook_url)
     .single();
 
-  if (error || !community) {
+  if (communityError || !community) {
     return NextResponse.json({ error: "Community not found" }, { status: 404 });
   }
 
@@ -38,7 +39,7 @@ export async function POST(
     FacebookWebhookPayload &
     LineWebhookPayload;
 
-  const author =
+  const platformUserId =
     body?.author?.name ||
     body?.entry?.[0]?.messaging?.[0]?.sender?.id ||
     body?.events?.[0]?.source?.userId ||
@@ -50,24 +51,34 @@ export async function POST(
     body?.events?.[0]?.message?.text ||
     "";
 
-  if (content) {
-    await getSupabase().from("flagged_posts").insert({
-      community_id: community.id,
-      author,
-      content,
-      platform: community.platform,
-      score: 0,
-      status: "pending",
-    });
-
-    await getSupabase()
-      .from("activity_feed")
-      .insert({
-        community_id: community.id,
-        type: "moderation",
-        message: `New message received from ${author}`,
-      });
+  if (!content) {
+    return NextResponse.json({ status: "ok" });
   }
+
+  // Upsert user by platform_user_id (unique per the schema)
+  const { data: user, error: userError } = await supabase
+    .from("users")
+    .upsert(
+      {
+        platform_user_id: platformUserId,
+        platform_type: community.platform,
+        display_name: platformUserId,
+      },
+      { onConflict: "platform_user_id" },
+    )
+    .select("id")
+    .single();
+
+  if (userError || !user) {
+    return NextResponse.json({ error: "Failed to resolve user" }, { status: 500 });
+  }
+
+  await supabase.from("posts").insert({
+    community_id: community.id,
+    user_id: user.id,
+    content_type: "post",
+    content_preview: content.slice(0, 500),
+  });
 
   return NextResponse.json({ status: "ok" });
 }

@@ -43,7 +43,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [loading, user, router]);
 
   useEffect(() => {
-    if (!loading && user && community !== undefined && !community?.onboarded) {
+    if (!loading && user && community !== undefined && !community?.is_onboarded) {
       router.push("/onboarding/community");
     }
   }, [loading, user, community, router]);
@@ -53,7 +53,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push("/");
   };
 
-  if (loading || !user || community === undefined || !community?.onboarded) {
+  if (loading || !user || community === undefined || !community?.is_onboarded) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground">
         กำลังโหลด...
@@ -93,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <div className="text-sm font-semibold truncate">{community?.name}</div>
           <div className="text-[10px] text-muted-foreground">
-            {community?.platform} · {community?.member_count.toLocaleString()} members
+            {community?.platform} · {community?.total_members.toLocaleString()} members
           </div>
         </div>
       </div>

@@ -8,83 +8,90 @@ import { X } from "lucide-react";
 
 type M = {
   id: string;
-  nickname: string;
-  persona_tag: string | null;
   role: string;
-  engagement_score: number;
-  platform_type: string | null;
-  last_seen_at: string | null;
   joined_at: string;
+  is_active: boolean;
+  users: {
+    id: string;
+    display_name: string;
+    platform_type: string;
+    warning_count: number;
+    status: string;
+    last_active_at: string | null;
+  } | null;
 };
 
 export default function Members() {
   const { data: community } = useCommunity();
   const [members, setMembers] = useState<M[]>([]);
   const [search, setSearch] = useState("");
-  const [persona, setPersona] = useState("__all__");
+  const [roleFilter, setRoleFilter] = useState("__all__");
   const [selected, setSelected] = useState<M | null>(null);
 
   useEffect(() => {
     if (!community) return;
     supabase
-      .from("members")
-      .select("*")
+      .from("community_members")
+      .select("id, role, joined_at, is_active, users(id, display_name, platform_type, warning_count, status, last_active_at)")
       .eq("community_id", community.id)
-      .order("engagement_score", { ascending: false })
+      .eq("is_active", true)
+      .order("joined_at", { ascending: false })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .then(({ data }) => setMembers((data ?? []) as any));
   }, [community]);
 
-  const personas = useMemo(() => {
+  const roles = useMemo(() => {
     const set = new Set<string>();
-    members.forEach((m) => {
-      if (m.persona_tag) set.add(m.persona_tag);
-    });
+    members.forEach((m) => set.add(m.role));
     return Array.from(set).sort();
   }, [members]);
 
   const filtered = members.filter((m) => {
-    const matchSearch = m.nickname.toLowerCase().includes(search.toLowerCase());
-    const matchPersona = persona === "__all__" || m.persona_tag === persona;
-    return matchSearch && matchPersona;
+    const name = m.users?.display_name ?? "";
+    const matchSearch = name.toLowerCase().includes(search.toLowerCase());
+    const matchRole = roleFilter === "__all__" || m.role === roleFilter;
+    return matchSearch && matchRole;
   });
 
-  const tierOf = (s: number) =>
-    s >= 85 ? "Diamond" : s >= 65 ? "Gold" : s >= 40 ? "Silver" : "Bronze";
-  const tierColor = (s: number) =>
-    s >= 85
-      ? "bg-primary/15 text-primary"
-      : s >= 65
+  const statusColor = (status: string) =>
+    status === "banned"
+      ? "bg-destructive/15 text-destructive"
+      : status === "muted" || status === "warned"
         ? "bg-warning/15 text-warning"
-        : s >= 40
-          ? "bg-muted-foreground/15 text-muted-foreground"
-          : "bg-destructive/15 text-destructive";
+        : "bg-accent/15 text-accent";
+
+  const warnColor = (count: number) =>
+    count >= 3
+      ? "text-destructive"
+      : count >= 1
+        ? "text-warning"
+        : "text-accent";
 
   return (
     <div className="space-y-6 max-w-7xl">
       <div>
         <h1 className="text-3xl mb-1">Members</h1>
         <p className="text-sm text-muted-foreground">
-          Synthetic personas built from real activity.
+          สมาชิกทั้งหมดในชุมชน พร้อมสถานะและข้อมูลจากแพลตฟอร์ม
         </p>
       </div>
 
       <div className="flex flex-wrap gap-3">
         <Input
-          placeholder="🔍 Search nickname or game..."
+          placeholder="🔍 Search by name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1 min-w-[260px] h-11"
         />
         <select
-          value={persona}
-          onChange={(e) => setPersona(e.target.value)}
-          className="h-11 rounded-md border border-border bg-card px-3 text-sm min-w-[180px]"
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+          className="h-11 rounded-md border border-border bg-card px-3 text-sm min-w-[160px]"
         >
-          <option value="__all__">All personas</option>
-          {personas.map((p) => (
-            <option key={p} value={p}>
-              {p}
+          <option value="__all__">All roles</option>
+          {roles.map((r) => (
+            <option key={r} value={r}>
+              {r}
             </option>
           ))}
         </select>
@@ -96,42 +103,43 @@ export default function Members() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {filtered.map((m) => (
-            <button
-              key={m.id}
-              onClick={() => setSelected(m)}
-              className="text-left rounded-xl border border-border bg-card p-5 hover:border-primary/40 transition"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-lg">
-                  {m.nickname.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="min-w-0">
-                  <div className="font-semibold truncate">{m.nickname}</div>
-                  <div className="text-xs text-muted-foreground capitalize">
-                    {m.persona_tag ?? m.role}
+          {filtered.map((m) => {
+            const user = m.users;
+            const name = user?.display_name ?? "—";
+            return (
+              <button
+                key={m.id}
+                onClick={() => setSelected(m)}
+                className="text-left rounded-xl border border-border bg-card p-5 hover:border-primary/40 transition"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-lg">
+                    {name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-semibold truncate">{name}</div>
+                    <div className="text-xs text-muted-foreground capitalize">{m.role}</div>
                   </div>
                 </div>
-              </div>
-              {m.role && (
-                <span className="inline-block text-[10px] px-2 py-0.5 rounded bg-primary/15 text-primary font-semibold mb-3 capitalize">
-                  {m.role}
-                </span>
-              )}
-              <div>
-                <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-muted-foreground uppercase tracking-wide">Engagement</span>
-                  <span className="font-semibold text-accent">{m.engagement_score}</span>
+                <div className="flex items-center gap-2 flex-wrap mb-3">
+                  <span
+                    className={`inline-block text-[10px] px-2 py-0.5 rounded font-semibold capitalize ${statusColor(user?.status ?? "active")}`}
+                  >
+                    {user?.status ?? "active"}
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded border border-border text-muted-foreground">
+                    {user?.platform_type ?? "—"}
+                  </span>
                 </div>
-                <div className="h-1.5 bg-background rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-primary to-accent"
-                    style={{ width: `${m.engagement_score}%` }}
-                  />
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground uppercase tracking-wide">Warnings</span>
+                  <span className={`font-bold ${warnColor(user?.warning_count ?? 0)}`}>
+                    {user?.warning_count ?? 0}
+                  </span>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -148,77 +156,62 @@ export default function Members() {
 
             <div className="flex flex-col items-center text-center mb-6">
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display font-bold text-3xl mb-3">
-                {selected.nickname.slice(0, 1).toUpperCase()}
+                {(selected.users?.display_name ?? "?").slice(0, 1).toUpperCase()}
               </div>
-              <div className="text-lg font-semibold">{selected.nickname}</div>
-              <div className="text-sm text-muted-foreground">
-                {selected.persona_tag ?? "Member"}
-              </div>
+              <div className="text-lg font-semibold">{selected.users?.display_name ?? "—"}</div>
+              <div className="text-sm text-muted-foreground capitalize">{selected.role}</div>
             </div>
 
             <div className="space-y-3 text-sm">
-              <Row label="Platform" value={selected.platform_type ?? "—"} />
+              <Row label="Platform" value={selected.users?.platform_type ?? "—"} />
               <Row label="Role" value={selected.role} className="capitalize" />
               <Row
                 label="Joined"
                 value={new Date(selected.joined_at).toLocaleDateString("th-TH")}
               />
               <Row
-                label="Last seen"
+                label="Last active"
                 value={
-                  selected.last_seen_at
-                    ? new Date(selected.last_seen_at).toLocaleString("th-TH")
+                  selected.users?.last_active_at
+                    ? new Date(selected.users.last_active_at).toLocaleString("th-TH")
                     : "—"
                 }
               />
+              <Row label="Status" value={selected.users?.status ?? "—"} className="capitalize" />
             </div>
 
             <div className="mt-6 rounded-lg border border-border bg-background/40 p-4">
               <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">
-                Engagement Score
+                Warning Count
               </div>
-              <div className="text-4xl font-display font-bold text-primary mb-3">
-                {selected.engagement_score}
+              <div className={`text-4xl font-display font-bold mb-1 ${warnColor(selected.users?.warning_count ?? 0)}`}>
+                {selected.users?.warning_count ?? 0}
               </div>
-              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-primary to-accent"
-                  style={{ width: `${selected.engagement_score}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 rounded-lg border border-accent/30 bg-accent/10 p-4">
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
-                Persona
-              </div>
-              <div className="text-base font-semibold flex items-center justify-between">
-                {selected.persona_tag ?? "Unclassified"}
-                <span>🎮</span>
+              <div className="text-xs text-muted-foreground">
+                {(selected.users?.warning_count ?? 0) === 0
+                  ? "No violations"
+                  : (selected.users?.warning_count ?? 0) >= 3
+                    ? "At risk of ban"
+                    : "Has prior warnings"}
               </div>
             </div>
 
             <div className="mt-6">
               <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">
-                Behavior Flags
+                Status Flags
               </div>
               <div className="flex flex-wrap gap-2">
                 <span
-                  className={`text-xs px-2.5 py-1 rounded ${tierColor(selected.engagement_score)} font-semibold`}
+                  className={`text-xs px-2.5 py-1 rounded font-semibold capitalize ${statusColor(selected.users?.status ?? "active")}`}
                 >
-                  {tierOf(selected.engagement_score)} Tier
+                  {selected.users?.status ?? "active"}
                 </span>
-                {selected.engagement_score >= 80 && (
-                  <span className="text-xs px-2.5 py-1 rounded bg-warning/15 text-warning font-semibold">
-                    High Activity
-                  </span>
-                )}
-                {selected.engagement_score >= 70 && (
+                {(selected.users?.warning_count ?? 0) === 0 && (
                   <span className="text-xs px-2.5 py-1 rounded bg-accent/15 text-accent font-semibold">
-                    Top Engager
+                    Clean Record
                   </span>
                 )}
-                {selected.engagement_score < 30 && (
+                {(selected.users?.warning_count ?? 0) >= 3 && (
                   <span className="text-xs px-2.5 py-1 rounded bg-destructive/15 text-destructive font-semibold">
                     At Risk
                   </span>

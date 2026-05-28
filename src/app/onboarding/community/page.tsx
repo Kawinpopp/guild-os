@@ -31,20 +31,20 @@ export default function OnboardCommunity() {
   const [form, setForm] = useState<{
     name: string;
     platform: Platform | "";
-    member_count: number | "";
-    group_url: string;
+    platform_group_id: string;
+    total_members: number | "";
   }>({
     name: "",
     platform: "",
-    member_count: "",
-    group_url: "",
+    platform_group_id: "",
+    total_members: "",
   });
   const [communityId, setCommunityId] = useState<string | null>(null);
   const [webhook, setWebhook] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && existing?.onboarded) router.replace("/dashboard");
+    if (!isLoading && existing?.is_onboarded) router.replace("/dashboard");
   }, [existing, isLoading, router]);
 
   const saveStep1 = async (e: React.FormEvent) => {
@@ -60,11 +60,11 @@ export default function OnboardCommunity() {
     }
 
     const payload: TablesInsert<"communities"> = {
-      admin_id: user!.id,
+      admin_auth_id: user!.id,
       name: form.name,
       platform: form.platform,
-      member_count: form.member_count || 0,
-      group_url: form.group_url || null,
+      platform_group_id: form.platform_group_id,
+      total_members: form.total_members || 0,
     };
 
     const { data, error } = await supabase.from("communities").insert(payload).select().single();
@@ -74,7 +74,7 @@ export default function OnboardCommunity() {
       return;
     }
     setCommunityId(data.id);
-    setWebhook(`https://api.guildos.app/webhook/${data.webhook_url}`);
+    setWebhook(`https://api.guildos.app/webhook/${data.platform_group_id}`);
     setStep(2);
   };
 
@@ -82,7 +82,7 @@ export default function OnboardCommunity() {
     setBusy(true);
     const { error } = await supabase
       .from("communities")
-      .update({ onboarded: true })
+      .update({ is_onboarded: true })
       .eq("id", communityId!);
     if (error) {
       setBusy(false);
@@ -145,9 +145,9 @@ export default function OnboardCommunity() {
                       <SelectValue placeholder="เลือก" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Facebook">Facebook</SelectItem>
-                      <SelectItem value="Discord">Discord</SelectItem>
-                      <SelectItem value="LINE">LINE</SelectItem>
+                      <SelectItem value="facebook">Facebook</SelectItem>
+                      <SelectItem value="discord">Discord</SelectItem>
+                      <SelectItem value="line">LINE</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -155,26 +155,30 @@ export default function OnboardCommunity() {
                   <Label>จำนวนสมาชิกประมาณ</Label>
                   <Input
                     type="number"
-                    value={form.member_count}
-                    onChange={(e) => setForm({ ...form, member_count: +e.target.value })}
+                    value={form.total_members}
+                    onChange={(e) => setForm({ ...form, total_members: +e.target.value })}
                     className="h-11"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>ลิงก์กลุ่ม (ไม่บังคับ)</Label>
+                <Label>Group / Server ID *</Label>
                 <Input
-                  value={form.group_url}
-                  onChange={(e) => setForm({ ...form, group_url: e.target.value })}
+                  required
+                  value={form.platform_group_id}
+                  onChange={(e) => setForm({ ...form, platform_group_id: e.target.value })}
                   className="h-11"
-                  placeholder="https://..."
+                  placeholder="เช่น Discord Server ID หรือ Facebook Group ID"
                 />
+                <p className="text-xs text-muted-foreground">
+                  ใช้สร้าง Webhook URL — หา ID ได้จาก Developer Settings ของแพลตฟอร์ม
+                </p>
               </div>
               <Button
                 type="submit"
                 variant="hero"
                 size="lg"
-                disabled={busy || !form.platform}
+                disabled={busy || !form.platform || !form.platform_group_id}
                 className="w-full"
               >
                 ถัดไป <ChevronRight size={18} />
