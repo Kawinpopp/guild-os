@@ -180,7 +180,11 @@ function AIConfig() {
   );
 }
 
-function Integrations({ community }: { community: { id: string; platform_group_id: string; platform: string } }) {
+function Integrations({
+  community,
+}: {
+  community: { id: string; platform_group_id: string; platform: string };
+}) {
   const webhookBase = `https://api.guildos.app/webhook/${community.platform_group_id}`;
 
   return (
@@ -188,7 +192,9 @@ function Integrations({ community }: { community: { id: string; platform_group_i
       <div className="rounded-xl border border-border bg-card p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="font-display font-bold text-lg capitalize">{community.platform} Webhook</div>
+            <div className="font-display font-bold text-lg capitalize">
+              {community.platform} Webhook
+            </div>
             <div className="text-xs text-muted-foreground mt-0.5">
               URL สำหรับรับ event จาก {community.platform}
             </div>
@@ -226,7 +232,11 @@ function Integrations({ community }: { community: { id: string; platform_group_i
         <p className="text-xs text-muted-foreground">
           ID ของกลุ่มบนแพลตฟอร์ม — ใช้ระบุชุมชนเมื่อรับ webhook
         </p>
-        <Input value={community.platform_group_id} readOnly className="h-10 font-mono text-xs bg-background/40" />
+        <Input
+          value={community.platform_group_id}
+          readOnly
+          className="h-10 font-mono text-xs bg-background/40"
+        />
       </div>
     </div>
   );
@@ -272,9 +282,17 @@ function Platforms() {
           รับแจ้งเตือนทาง Email เมื่อเกิดเหตุการณ์สำคัญ
         </p>
         {[
-          { k: "spam" as const, t: "Spam Spike Alert", d: "แจ้งเมื่อ spam เกิน 5 โพสต์ใน 1 ชั่วโมง" },
+          {
+            k: "spam" as const,
+            t: "Spam Spike Alert",
+            d: "แจ้งเมื่อ spam เกิน 5 โพสต์ใน 1 ชั่วโมง",
+          },
           { k: "team" as const, t: "Team Formed", d: "แจ้งเมื่อ AI จัดทีมสำเร็จ" },
-          { k: "milestone" as const, t: "Member Milestone", d: "แจ้งเมื่อสมาชิกถึง 100, 500, 1000 คน" },
+          {
+            k: "milestone" as const,
+            t: "Member Milestone",
+            d: "แจ้งเมื่อสมาชิกถึง 100, 500, 1000 คน",
+          },
         ].map((n) => (
           <div
             key={n.k}
@@ -310,11 +328,11 @@ function Profile() {
 
   const save = async () => {
     if (!community) return;
-    const { error } = await supabase
-      .from("communities")
-      .update({ name })
-      .eq("id", community.id);
-    if (error) { toast.error(error.message); return; }
+    const { error } = await supabase.from("communities").update({ name }).eq("id", community.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("บันทึกแล้ว");
     refetch();
   };
@@ -331,11 +349,19 @@ function Profile() {
       </div>
       <div className="space-y-2">
         <Label>Platform</Label>
-        <Input value={community?.platform ?? ""} readOnly className="h-11 bg-background/40 capitalize" />
+        <Input
+          value={community?.platform ?? ""}
+          readOnly
+          className="h-11 bg-background/40 capitalize"
+        />
       </div>
       <div className="space-y-2">
         <Label>Platform Group ID</Label>
-        <Input value={community?.platform_group_id ?? ""} readOnly className="h-11 bg-background/40 font-mono text-xs" />
+        <Input
+          value={community?.platform_group_id ?? ""}
+          readOnly
+          className="h-11 bg-background/40 font-mono text-xs"
+        />
       </div>
       <Button variant="hero" onClick={save}>
         บันทึก
@@ -449,7 +475,9 @@ function HealthChecks() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg">System Health</h2>
-          <p className="text-xs text-muted-foreground">{pass}/{checks.length} ผ่าน</p>
+          <p className="text-xs text-muted-foreground">
+            {pass}/{checks.length} ผ่าน
+          </p>
         </div>
         <Button variant="outline" size="sm" onClick={run}>
           Re-check

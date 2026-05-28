@@ -55,12 +55,14 @@ export default function Matchmaking() {
     setLoading(true);
     const { data } = await supabase
       .from("matches")
-      .select(`
+      .select(
+        `
         id, game, match_score, game_score, time_score, role_score, style_score,
         status, requested_at, responded_at,
         requester:users!matches_requester_id_fkey(display_name),
         matched_user:users!matches_matched_user_id_fkey(display_name)
-      `)
+      `,
+      )
       .eq("community_id", community.id)
       .order("requested_at", { ascending: false })
       .limit(100);
@@ -72,8 +74,7 @@ export default function Matchmaking() {
     refresh();
   }, [community]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filtered =
-    filter === "all" ? matches : matches.filter((m) => m.status === filter);
+  const filtered = filter === "all" ? matches : matches.filter((m) => m.status === filter);
 
   const counts = {
     pending: matches.filter((m) => m.status === "pending").length,
@@ -138,9 +139,7 @@ export default function Matchmaking() {
           <div className="p-8 text-center text-sm text-muted-foreground">กำลังโหลด...</div>
         )}
         {!loading && filtered.length === 0 && (
-          <div className="p-10 text-center text-muted-foreground">
-            ยังไม่มีการจับคู่
-          </div>
+          <div className="p-10 text-center text-muted-foreground">ยังไม่มีการจับคู่</div>
         )}
         <ul className="divide-y divide-border">
           {filtered.map((m) => (
@@ -166,9 +165,7 @@ export default function Matchmaking() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <Swords size={13} className="text-primary shrink-0" />
-                  <span className="font-semibold text-sm">
-                    {m.requester?.display_name ?? "—"}
-                  </span>
+                  <span className="font-semibold text-sm">{m.requester?.display_name ?? "—"}</span>
                   <span className="text-xs text-muted-foreground">vs</span>
                   <span className="font-semibold text-sm">
                     {m.matched_user?.display_name ?? "—"}

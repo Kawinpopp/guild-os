@@ -107,7 +107,12 @@ export default function Overview() {
   const cards = [
     { label: "Active Members", value: stats.data?.members ?? "—", icon: Users, color: "primary" },
     { label: "Posts Today", value: stats.data?.posts ?? "—", icon: MessageCircle, color: "accent" },
-    { label: "Spam Blocked Today", value: stats.data?.blocked ?? "—", icon: Shield, color: "primary" },
+    {
+      label: "Spam Blocked Today",
+      value: stats.data?.blocked ?? "—",
+      icon: Shield,
+      color: "primary",
+    },
     { label: "Matches Today", value: stats.data?.matches ?? "—", icon: Swords, color: "accent" },
   ];
 

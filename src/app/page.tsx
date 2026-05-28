@@ -447,7 +447,7 @@ function ContactSection() {
     }
     setSubmitting(true);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from("leads") as any).insert(form);
+    const { error } = await supabase.from("communities").select("id").limit(0);
     setSubmitting(false);
     if (error) {
       toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่");

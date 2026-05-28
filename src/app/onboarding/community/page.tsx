@@ -207,21 +207,21 @@ export default function OnboardCommunity() {
               </div>
               <div className="rounded-lg bg-background/60 border border-border p-4 text-sm text-muted-foreground space-y-2">
                 <p className="font-semibold text-foreground">วิธีตั้งค่าสำหรับ {form.platform}:</p>
-                {form.platform === "Discord" && (
+                {form.platform === "discord" && (
                   <p>
                     1. ไปที่ Server Settings → Integrations → Webhooks → New Webhook
                     <br />
                     2. วาง URL ด้านบนใน Webhook URL
                   </p>
                 )}
-                {form.platform === "Facebook" && (
+                {form.platform === "facebook" && (
                   <p>
                     1. ไปที่ Facebook Developer Console
                     <br />
                     2. ตั้งค่า Webhook สำหรับ Group และวาง URL ด้านบน
                   </p>
                 )}
-                {form.platform === "LINE" && (
+                {form.platform === "line" && (
                   <p>
                     1. ไปที่ LINE Developers Console
                     <br />

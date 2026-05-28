@@ -11,13 +11,13 @@ type DayStat = {
   members: number;
   posts: number;
   removed: number;
-  teams: number;
+  matches: number;
 };
 
 type TopMember = {
-  nickname: string;
-  engagement_score: number;
-  persona_tag: string | null;
+  display_name: string;
+  warning_count: number;
+  status: string;
 };
 
 function BarGroup({ value, max, color }: { value: number; max: number; color: string }) {
@@ -39,7 +39,7 @@ export default function Insights() {
   const { data: community } = useCommunity();
   const [stats, setStats] = useState<DayStat[]>([]);
   const [topMembers, setTopMembers] = useState<TopMember[]>([]);
-  const [totals, setTotals] = useState({ members: 0, posts: 0, removed: 0, teams: 0 });
+  const [totals, setTotals] = useState({ members: 0, posts: 0, removed: 0, matches: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,7 +49,6 @@ export default function Insights() {
     const load = async () => {
       setLoading(true);
 
-      // Build last-7-days buckets
       const days: DayStat[] = Array.from({ length: 7 }, (_, i) => {
         const d = new Date();
         d.setDate(d.getDate() - (6 - i));
@@ -60,40 +59,42 @@ export default function Insights() {
           members: 0,
           posts: 0,
           removed: 0,
-          teams: 0,
+          matches: 0,
         };
       });
 
       const since = days[0].date;
 
-      const [membersRes, postsRes, removedRes, teamsRes, topRes, countRes] = await Promise.all([
+      const [membersRes, postsRes, removedRes, matchesRes, topRes, countRes] = await Promise.all([
         supabase
-          .from("members")
+          .from("community_members")
+          .select("joined_at")
+          .eq("community_id", id)
+          .gte("joined_at", since),
+        supabase.from("posts").select("created_at").eq("community_id", id).gte("created_at", since),
+        supabase
+          .from("moderation_logs")
           .select("created_at")
           .eq("community_id", id)
+          .eq("action_taken", "remove")
           .gte("created_at", since),
         supabase
-          .from("flagged_posts")
-          .select("created_at")
+          .from("matches")
+          .select("requested_at")
           .eq("community_id", id)
-          .gte("created_at", since),
+          .gte("requested_at", since),
         supabase
-          .from("flagged_posts")
-          .select("created_at")
+          .from("community_members")
+          .select("users(display_name, warning_count, status)")
           .eq("community_id", id)
-          .eq("status", "removed")
-          .gte("created_at", since),
-        supabase.from("teams").select("created_at").eq("community_id", id).gte("created_at", since),
-        supabase
-          .from("members")
-          .select("nickname, engagement_score, persona_tag")
-          .eq("community_id", id)
-          .order("engagement_score", { ascending: false })
+          .eq("is_active", true)
+          .order("joined_at", { ascending: true })
           .limit(5),
         supabase
-          .from("members")
+          .from("community_members")
           .select("id", { count: "exact", head: true })
-          .eq("community_id", id),
+          .eq("community_id", id)
+          .eq("is_active", true),
       ]);
 
       const bucket = (iso: string) => {
@@ -105,7 +106,7 @@ export default function Insights() {
       const dayMap = Object.fromEntries(days.map((d) => [bucket(d.date), d]));
 
       (membersRes.data ?? []).forEach((r) => {
-        const b = bucket(r.created_at);
+        const b = bucket(r.joined_at ?? "");
         if (dayMap[b]) dayMap[b].members++;
       });
       (postsRes.data ?? []).forEach((r) => {
@@ -116,18 +117,23 @@ export default function Insights() {
         const b = bucket(r.created_at);
         if (dayMap[b]) dayMap[b].removed++;
       });
-      (teamsRes.data ?? []).forEach((r) => {
-        const b = bucket(r.created_at);
-        if (dayMap[b]) dayMap[b].teams++;
+      (matchesRes.data ?? []).forEach((r) => {
+        const b = bucket(r.requested_at ?? "");
+        if (dayMap[b]) dayMap[b].matches++;
       });
 
+      const top = (topRes.data ?? [])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((m: any) => m.users)
+        .filter(Boolean) as TopMember[];
+
       setStats(days);
-      setTopMembers((topRes.data ?? []) as TopMember[]);
+      setTopMembers(top);
       setTotals({
         members: countRes.count ?? 0,
         posts: postsRes.data?.length ?? 0,
         removed: removedRes.data?.length ?? 0,
-        teams: teamsRes.data?.length ?? 0,
+        matches: matchesRes.data?.length ?? 0,
       });
       setLoading(false);
     };
@@ -136,14 +142,14 @@ export default function Insights() {
   }, [community]);
 
   const maxPosts = Math.max(...stats.map((d) => d.posts), 1);
-  const maxTeams = Math.max(...stats.map((d) => d.teams), 1);
+  const maxMatches = Math.max(...stats.map((d) => d.matches), 1);
   const maxMembers = Math.max(...stats.map((d) => d.members), 1);
 
   const summary = [
     { label: "Total Members", value: totals.members, icon: Users, color: "text-primary" },
     { label: "Posts Flagged (7d)", value: totals.posts, icon: Shield, color: "text-warning" },
     { label: "Posts Removed (7d)", value: totals.removed, icon: Shield, color: "text-destructive" },
-    { label: "Teams Formed (7d)", value: totals.teams, icon: Swords, color: "text-accent" },
+    { label: "Matches (7d)", value: totals.matches, icon: Swords, color: "text-accent" },
   ];
 
   return (
@@ -153,7 +159,6 @@ export default function Insights() {
         <p className="text-sm text-muted-foreground">ภาพรวมสถิติชุมชน 7 วันล่าสุด</p>
       </div>
 
-      {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {summary.map((s) => (
           <div key={s.label} className="rounded-xl border border-border bg-card p-5">
@@ -168,11 +173,10 @@ export default function Insights() {
         ))}
       </div>
 
-      {/* Flagged posts chart */}
       <div className="rounded-xl border border-border bg-card p-6">
         <div className="flex items-center gap-2 mb-6">
           <BarChart3 size={16} className="text-warning" />
-          <h2 className="text-lg">Flagged Posts (7 วัน)</h2>
+          <h2 className="text-lg">Posts Flagged (7 วัน)</h2>
         </div>
         <div className="flex items-end gap-2">
           {stats.map((d) => (
@@ -186,16 +190,15 @@ export default function Insights() {
         </div>
       </div>
 
-      {/* Teams chart */}
       <div className="rounded-xl border border-border bg-card p-6">
         <div className="flex items-center gap-2 mb-6">
           <Swords size={16} className="text-accent" />
-          <h2 className="text-lg">Teams Formed (7 วัน)</h2>
+          <h2 className="text-lg">Matches (7 วัน)</h2>
         </div>
         <div className="flex items-end gap-2">
           {stats.map((d) => (
             <div key={d.date} className="flex-1 flex flex-col items-center gap-2">
-              <BarGroup value={d.teams} max={maxTeams} color="bg-accent/60" />
+              <BarGroup value={d.matches} max={maxMatches} color="bg-accent/60" />
               <span className="text-[10px] text-muted-foreground text-center leading-tight">
                 {d.label}
               </span>
@@ -204,7 +207,6 @@ export default function Insights() {
         </div>
       </div>
 
-      {/* New members chart */}
       <div className="rounded-xl border border-border bg-card p-6">
         <div className="flex items-center gap-2 mb-6">
           <TrendingUp size={16} className="text-primary" />
@@ -222,18 +224,17 @@ export default function Insights() {
         </div>
       </div>
 
-      {/* Top members leaderboard */}
       <div className="rounded-xl border border-border bg-card">
         <div className="p-5 border-b border-border flex items-center gap-2">
           <Users size={16} className="text-primary" />
-          <h2 className="text-lg">Top Members by Engagement</h2>
+          <h2 className="text-lg">OG Members (joined earliest)</h2>
         </div>
         <ul className="divide-y divide-border">
           {topMembers.length === 0 && (
             <li className="p-6 text-sm text-center text-muted-foreground">ยังไม่มีข้อมูล</li>
           )}
           {topMembers.map((m, i) => (
-            <li key={m.nickname} className="px-5 py-3 flex items-center gap-4">
+            <li key={i} className="px-5 py-3 flex items-center gap-4">
               <span
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                   i === 0
@@ -248,20 +249,16 @@ export default function Insights() {
                 {i + 1}
               </span>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-sm truncate">{m.nickname}</div>
-                <div className="text-xs text-muted-foreground">{m.persona_tag ?? "Member"}</div>
+                <div className="font-semibold text-sm truncate">{m.display_name}</div>
+                <div className="text-xs text-muted-foreground capitalize">{m.status}</div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="w-24 h-1.5 bg-background rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-primary to-accent"
-                    style={{ width: `${m.engagement_score}%` }}
-                  />
-                </div>
-                <span className="text-xs font-semibold text-primary w-8 text-right">
-                  {m.engagement_score}
-                </span>
-              </div>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded font-semibold ${
+                  m.warning_count === 0 ? "bg-accent/15 text-accent" : "bg-warning/15 text-warning"
+                }`}
+              >
+                {m.warning_count === 0 ? "Clean" : `${m.warning_count} warns`}
+              </span>
             </li>
           ))}
         </ul>

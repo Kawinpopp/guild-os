@@ -40,11 +40,13 @@ export default function MemberPortal() {
     Promise.all([
       supabase
         .from("matches")
-        .select(`
+        .select(
+          `
           id, game, match_score, status, requested_at,
           requester:users!matches_requester_id_fkey(display_name),
           matched_user:users!matches_matched_user_id_fkey(display_name)
-        `)
+        `,
+        )
         .eq("community_id", id)
         .order("requested_at", { ascending: false })
         .limit(10),
@@ -185,7 +187,11 @@ export default function MemberPortal() {
                     </div>
                   </div>
                   <div className="text-[10px] text-muted-foreground shrink-0">
-                    joined {new Date(m.joined_at).toLocaleDateString("th-TH", { day: "2-digit", month: "short" })}
+                    joined{" "}
+                    {new Date(m.joined_at).toLocaleDateString("th-TH", {
+                      day: "2-digit",
+                      month: "short",
+                    })}
                   </div>
                 </li>
               );

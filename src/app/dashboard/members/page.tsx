@@ -32,7 +32,9 @@ export default function Members() {
     if (!community) return;
     supabase
       .from("community_members")
-      .select("id, role, joined_at, is_active, users(id, display_name, platform_type, warning_count, status, last_active_at)")
+      .select(
+        "id, role, joined_at, is_active, users(id, display_name, platform_type, warning_count, status, last_active_at)",
+      )
       .eq("community_id", community.id)
       .eq("is_active", true)
       .order("joined_at", { ascending: false })
@@ -61,11 +63,7 @@ export default function Members() {
         : "bg-accent/15 text-accent";
 
   const warnColor = (count: number) =>
-    count >= 3
-      ? "text-destructive"
-      : count >= 1
-        ? "text-warning"
-        : "text-accent";
+    count >= 3 ? "text-destructive" : count >= 1 ? "text-warning" : "text-accent";
 
   return (
     <div className="space-y-6 max-w-7xl">
@@ -184,7 +182,9 @@ export default function Members() {
               <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">
                 Warning Count
               </div>
-              <div className={`text-4xl font-display font-bold mb-1 ${warnColor(selected.users?.warning_count ?? 0)}`}>
+              <div
+                className={`text-4xl font-display font-bold mb-1 ${warnColor(selected.users?.warning_count ?? 0)}`}
+              >
                 {selected.users?.warning_count ?? 0}
               </div>
               <div className="text-xs text-muted-foreground">

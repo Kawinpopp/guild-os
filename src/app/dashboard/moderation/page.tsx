@@ -47,12 +47,14 @@ export default function Moderation() {
     setLoading(true);
     const { data } = await supabase
       .from("moderation_logs")
-      .select(`
+      .select(
+        `
         id, label, confidence_score, action_taken, requires_review, created_at,
         posts(content_preview, is_blocked),
         users(display_name, platform_type),
         human_reviews(id, decision, reviewed_at)
-      `)
+      `,
+      )
       .eq("community_id", community.id)
       .order("created_at", { ascending: false })
       .limit(200);
@@ -104,8 +106,11 @@ export default function Moderation() {
     );
     if (selected?.id === logId) setSelected(null);
     toast.success(
-      decision === "confirm" ? "ยืนยันการดำเนินการแล้ว" :
-      decision === "override" ? "Override แล้ว" : "ข้ามแล้ว",
+      decision === "confirm"
+        ? "ยืนยันการดำเนินการแล้ว"
+        : decision === "override"
+          ? "Override แล้ว"
+          : "ข้ามแล้ว",
     );
   };
 
@@ -319,7 +324,9 @@ export default function Moderation() {
               </div>
               <div>
                 <div className="text-xs text-muted-foreground mb-1">AI Action</div>
-                <div className={`capitalize font-semibold ${ACTION_COLOR[selected.action_taken] ?? ""}`}>
+                <div
+                  className={`capitalize font-semibold ${ACTION_COLOR[selected.action_taken] ?? ""}`}
+                >
                   {selected.action_taken}
                 </div>
               </div>
