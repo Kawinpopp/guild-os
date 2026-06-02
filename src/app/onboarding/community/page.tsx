@@ -31,12 +31,10 @@ export default function OnboardCommunity() {
   const [form, setForm] = useState<{
     name: string;
     platform: Platform | "";
-    platform_group_id: string;
     total_members: number | "";
   }>({
     name: "",
     platform: "",
-    platform_group_id: "",
     total_members: "",
   });
   const [communityId, setCommunityId] = useState<string | null>(null);
@@ -51,7 +49,7 @@ export default function OnboardCommunity() {
     if (!isLoading && existing?.is_onboarded) router.replace("/dashboard");
   }, [existing, isLoading, router]);
 
-  const saveStep1 = async (e: React.FormEvent) => {
+  const saveStep1 = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!form.platform || !user) return;
     setBusy(true);
@@ -67,7 +65,7 @@ export default function OnboardCommunity() {
       admin_auth_id: user.id,
       name: form.name,
       platform: form.platform,
-      platform_group_id: form.platform_group_id,
+      platform_group_id: crypto.randomUUID(),
       total_members: form.total_members || 0,
     };
 
@@ -78,7 +76,7 @@ export default function OnboardCommunity() {
       return;
     }
     setCommunityId(data.id);
-    setWebhook(`https://api.guildos.app/webhook/${data.platform_group_id}`);
+    setWebhook(`https://api.guildos.app/api/webhook/${data.platform}/${data.platform_group_id}`);
     setStep(2);
   };
 
@@ -166,24 +164,11 @@ export default function OnboardCommunity() {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>Group / Server ID *</Label>
-                <Input
-                  required
-                  value={form.platform_group_id}
-                  onChange={(e) => setForm({ ...form, platform_group_id: e.target.value })}
-                  className="h-11"
-                  placeholder="เช่น Discord Server ID หรือ Facebook Group ID"
-                />
-                <p className="text-xs text-muted-foreground">
-                  ใช้สร้าง Webhook URL — หา ID ได้จาก Developer Settings ของแพลตฟอร์ม
-                </p>
-              </div>
               <Button
                 type="submit"
                 variant="hero"
                 size="lg"
-                disabled={busy || !form.platform || !form.platform_group_id}
+                disabled={busy || !form.platform}
                 className="w-full"
               >
                 ถัดไป <ChevronRight size={18} />

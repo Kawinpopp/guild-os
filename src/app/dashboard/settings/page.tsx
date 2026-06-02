@@ -185,7 +185,7 @@ function Integrations({
 }: {
   community: { id: string; platform_group_id: string; platform: string };
 }) {
-  const webhookBase = `https://api.guildos.app/webhook/${community.platform_group_id}`;
+  const webhookBase = `https://api.guildos.app/api/webhook/${community.platform}/${community.platform_group_id}`;
 
   return (
     <div className="space-y-5">
