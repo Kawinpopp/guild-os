@@ -5,10 +5,7 @@ export const dynamic = "force-dynamic";
 
 // LINE sets webhook URL to: /api/webhook/line/{token}
 // Payload: { events: [{ source: { userId }, message: { text } }] }
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ token: string }> },
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const body = await req.json();
 

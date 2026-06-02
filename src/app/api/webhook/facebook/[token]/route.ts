@@ -5,10 +5,7 @@ export const dynamic = "force-dynamic";
 
 // Facebook sets webhook URL to: /api/webhook/facebook/{token}
 // Payload (Group feed): { entry: [{ changes: [{ value: { from: { id }, message } }] }] }
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ token: string }> },
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const body = await req.json();
 

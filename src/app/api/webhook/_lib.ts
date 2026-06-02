@@ -10,11 +10,7 @@ export function getSupabase() {
   return _supabase;
 }
 
-export async function saveMessage(
-  token: string,
-  platformUserId: string,
-  content: string,
-) {
+export async function saveMessage(token: string, platformUserId: string, content: string) {
   if (!content) return { ok: true };
 
   const supabase = getSupabase();

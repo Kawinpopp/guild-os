@@ -5,10 +5,7 @@ export const dynamic = "force-dynamic";
 
 // Discord bot POSTs here: POST /api/webhook/discord/{token}
 // Payload: { author: { id: string, username: string }, content: string }
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ token: string }> },
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const body = await req.json();
 
