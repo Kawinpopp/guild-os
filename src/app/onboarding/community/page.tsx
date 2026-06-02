@@ -25,7 +25,7 @@ import { Check, Copy, ChevronRight } from "lucide-react";
 export default function OnboardCommunity() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { data: existing, isLoading } = useCommunity();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<{
@@ -44,12 +44,16 @@ export default function OnboardCommunity() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    if (!loading && !user) router.replace("/login");
+  }, [loading, user, router]);
+
+  useEffect(() => {
     if (!isLoading && existing?.is_onboarded) router.replace("/dashboard");
   }, [existing, isLoading, router]);
 
   const saveStep1 = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.platform) return;
+    if (!form.platform || !user) return;
     setBusy(true);
 
     // Community already created — user went back, just skip to step 2
@@ -60,7 +64,7 @@ export default function OnboardCommunity() {
     }
 
     const payload: TablesInsert<"communities"> = {
-      admin_auth_id: user!.id,
+      admin_auth_id: user.id,
       name: form.name,
       platform: form.platform,
       platform_group_id: form.platform_group_id,
@@ -79,17 +83,18 @@ export default function OnboardCommunity() {
   };
 
   const finish = async () => {
+    if (!user || !communityId) return;
     setBusy(true);
     const { error } = await supabase
       .from("communities")
       .update({ is_onboarded: true })
-      .eq("id", communityId!);
+      .eq("id", communityId);
     if (error) {
       setBusy(false);
       toast.error(error.message);
       return;
     }
-    await queryClient.invalidateQueries({ queryKey: ["community", user!.id] });
+    await queryClient.invalidateQueries({ queryKey: ["community", user.id] });
     setBusy(false);
     toast.success("เริ่มต้นใช้งาน GuildOS!");
     router.replace("/dashboard");
