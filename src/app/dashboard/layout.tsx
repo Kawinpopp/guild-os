@@ -58,7 +58,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [loading, user, router]);
 
   useEffect(() => {
-    if (!loading && user && !communityLoading && community !== undefined && !community?.is_onboarded) {
+    if (
+      !loading &&
+      user &&
+      !communityLoading &&
+      community !== undefined &&
+      !community?.is_onboarded
+    ) {
       router.push("/onboarding/community");
     }
   }, [loading, user, communityLoading, community, router]);
@@ -162,7 +168,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {communityLoading ? (
               <Skeleton className="h-4 w-36" />
             ) : (
-              <span className="text-sm font-semibold truncate max-w-[200px]">{community?.name}</span>
+              <span className="text-sm font-semibold truncate max-w-[200px]">
+                {community?.name}
+              </span>
             )}
           </div>
           <Button variant="ghost" size="sm" onClick={onLogout}>
