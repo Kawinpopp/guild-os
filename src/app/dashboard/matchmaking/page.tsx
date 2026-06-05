@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCommunity } from "@/lib/use-community";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Swords } from "lucide-react";
+import { RefreshCw, Swords, Check, X } from "lucide-react";
 
 type MatchItem = {
   id: string;
@@ -49,10 +50,9 @@ export default function Matchmaking() {
   const [filter, setFilter] = useState<"all" | "pending" | "accepted" | "rejected">("all");
   const [selected, setSelected] = useState<MatchItem | null>(null);
   const [loading, setLoading] = useState(false);
+  const [responding, setResponding] = useState(false);
 
-  const refresh = async () => {
-    if (!community) return;
-    setLoading(true);
+  const fetchMatches = async (communityId: string) => {
     const { data } = await supabase
       .from("matches")
       .select(
@@ -63,15 +63,59 @@ export default function Matchmaking() {
         matched_user:users!matches_matched_user_id_fkey(display_name)
       `,
       )
-      .eq("community_id", community.id)
+      .eq("community_id", communityId)
       .order("requested_at", { ascending: false })
       .limit(100);
     setMatches((data ?? []) as unknown as MatchItem[]);
+  };
+
+  const refresh = async () => {
+    if (!community) return;
+    setLoading(true);
+    await fetchMatches(community.id);
     setLoading(false);
   };
 
+  const respond = async (matchId: string, decision: "accepted" | "rejected") => {
+    setResponding(true);
+    const { error } = await supabase
+      .from("matches")
+      .update({ status: decision, responded_at: new Date().toISOString() })
+      .eq("id", matchId);
+    if (error) {
+      toast.error("เกิดข้อผิดพลาด");
+    } else {
+      toast.success(decision === "accepted" ? "รับการจับคู่แล้ว" : "ปฏิเสธการจับคู่แล้ว");
+      setMatches((prev) =>
+        prev.map((m) =>
+          m.id === matchId
+            ? { ...m, status: decision, responded_at: new Date().toISOString() }
+            : m,
+        ),
+      );
+      setSelected((prev) =>
+        prev?.id === matchId
+          ? { ...prev, status: decision, responded_at: new Date().toISOString() }
+          : prev,
+      );
+    }
+    setResponding(false);
+  };
+
   useEffect(() => {
-    refresh();
+    if (!community) return;
+    fetchMatches(community.id);
+
+    const channel = supabase
+      .channel(`matches:${community.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "matches", filter: `community_id=eq.${community.id}` },
+        () => fetchMatches(community.id),
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [community]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = filter === "all" ? matches : matches.filter((m) => m.status === filter);
@@ -254,6 +298,27 @@ export default function Matchmaking() {
               <ScoreBar label="Role (20%)" value={selected.role_score} />
               <ScoreBar label="Style (15%)" value={selected.style_score} />
             </div>
+
+            {selected.status === "pending" && (
+              <div className="flex gap-3 pt-2">
+                <Button
+                  className="flex-1"
+                  variant="outline"
+                  disabled={responding}
+                  onClick={() => respond(selected.id, "rejected")}
+                >
+                  <X size={14} /> ปฏิเสธ
+                </Button>
+                <Button
+                  className="flex-1"
+                  variant="hero"
+                  disabled={responding}
+                  onClick={() => respond(selected.id, "accepted")}
+                >
+                  <Check size={14} /> รับการจับคู่
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}

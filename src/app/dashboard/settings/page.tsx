@@ -22,6 +22,7 @@ import {
   User,
   CreditCard,
   Shield,
+  Swords,
 } from "lucide-react";
 
 type Tab = "ai" | "integrations" | "health" | "platforms" | "profile" | "subscription";
@@ -77,18 +78,32 @@ export default function Settings() {
 }
 
 function AIConfig() {
+  const { data: community } = useCommunity();
   const [threshold, setThreshold] = useState(0.85);
   const [autoRemove, setAutoRemove] = useState(true);
-  const [rules, setRules] = useState<Record<string, number>>({
-    ROV: 5,
-    MLBB: 5,
-    Valorant: 5,
-    "PUBG Mobile": 4,
-  });
   const [timeWindow, setTimeWindow] = useState(60);
+  const [saving, setSaving] = useState(false);
 
-  const save = () => {
-    toast.success("บันทึกแล้ว (config จะถูก sync ไปยัง AI service)");
+  useEffect(() => {
+    if (!community) return;
+    const cfg = (community as unknown as { matchmaker_config?: { time_window?: number } })
+      .matchmaker_config;
+    if (cfg?.time_window) setTimeWindow(cfg.time_window);
+  }, [community]);
+
+  const save = async () => {
+    if (!community) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("communities")
+      .update({ matchmaker_config: { time_window: timeWindow } } as never)
+      .eq("id", community.id);
+    setSaving(false);
+    if (error) {
+      toast.error("บันทึกไม่สำเร็จ");
+    } else {
+      toast.success("บันทึก Time Window แล้ว");
+    }
   };
 
   return (
@@ -141,21 +156,10 @@ function AIConfig() {
       </div>
 
       <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-        <h2 className="text-lg">⚙ Matchmaker Rules</h2>
-        {(["ROV", "MLBB", "Valorant", "PUBG Mobile"] as const).map((g) => (
-          <div key={g} className="flex items-center gap-3">
-            <div className="w-32 text-sm">{g}</div>
-            <Input
-              type="number"
-              min={1}
-              max={10}
-              value={rules[g] ?? 5}
-              onChange={(e) => setRules({ ...rules, [g]: Number(e.target.value) || 1 })}
-              className="w-20 h-10"
-            />
-            <span className="text-xs text-muted-foreground">คน</span>
-          </div>
-        ))}
+        <div className="flex items-center gap-2">
+          <Swords size={18} className="text-primary" />
+          <h2 className="text-lg">Matchmaker</h2>
+        </div>
         <div>
           <div className="flex items-center justify-between text-sm mb-2">
             <Label>Time Window</Label>
@@ -170,11 +174,15 @@ function AIConfig() {
             onChange={(e) => setTimeWindow(Number(e.target.value))}
             className="w-full accent-primary"
           />
+          <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+            <span>10 นาที</span>
+            <span>180 นาที</span>
+          </div>
         </div>
       </div>
 
-      <Button variant="hero" onClick={save}>
-        บันทึกการตั้งค่า
+      <Button variant="hero" onClick={save} disabled={saving}>
+        {saving ? "กำลังบันทึก..." : "บันทึกการตั้งค่า"}
       </Button>
     </div>
   );
