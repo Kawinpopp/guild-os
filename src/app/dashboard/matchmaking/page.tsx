@@ -88,9 +88,7 @@ export default function Matchmaking() {
       toast.success(decision === "accepted" ? "รับการจับคู่แล้ว" : "ปฏิเสธการจับคู่แล้ว");
       setMatches((prev) =>
         prev.map((m) =>
-          m.id === matchId
-            ? { ...m, status: decision, responded_at: new Date().toISOString() }
-            : m,
+          m.id === matchId ? { ...m, status: decision, responded_at: new Date().toISOString() } : m,
         ),
       );
       setSelected((prev) =>
@@ -110,12 +108,19 @@ export default function Matchmaking() {
       .channel(`matches:${community.id}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "matches", filter: `community_id=eq.${community.id}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "matches",
+          filter: `community_id=eq.${community.id}`,
+        },
         () => fetchMatches(community.id),
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [community]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = filter === "all" ? matches : matches.filter((m) => m.status === filter);
