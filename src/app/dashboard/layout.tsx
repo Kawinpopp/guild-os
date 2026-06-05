@@ -7,6 +7,7 @@ import { useAuth, signOut as authSignOut } from "@/lib/auth-context";
 import { useCommunity } from "@/lib/use-community";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   LayoutDashboard,
   Shield,
@@ -29,11 +30,25 @@ const NAV = [
   { to: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 
+function ContentSkeleton() {
+  return (
+    <div className="space-y-6 p-4 md:p-8">
+      <Skeleton className="h-8 w-48" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-28 rounded-xl" />
+        ))}
+      </div>
+      <Skeleton className="h-64 rounded-xl" />
+    </div>
+  );
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const path = usePathname();
   const { user, loading } = useAuth();
-  const { data: community } = useCommunity();
+  const { data: community, isLoading: communityLoading } = useCommunity();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -43,23 +58,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [loading, user, router]);
 
   useEffect(() => {
-    if (!loading && user && community !== undefined && !community?.is_onboarded) {
+    if (!loading && user && !communityLoading && community !== undefined && !community?.is_onboarded) {
       router.push("/onboarding/community");
     }
-  }, [loading, user, community, router]);
+  }, [loading, user, communityLoading, community, router]);
 
   const onLogout = async () => {
     await authSignOut();
     router.push("/");
   };
 
-  if (loading || !user || community === undefined || !community?.is_onboarded) {
+  // Auth loading — show minimal shell while Supabase resolves session from cookie
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
-        กำลังโหลด...
+      <div className="min-h-screen bg-background flex">
+        <div className="hidden md:flex w-[210px] shrink-0 bg-sidebar border-r border-sidebar-border flex-col">
+          <div className="px-5 py-5 border-b border-sidebar-border">
+            <Logo />
+          </div>
+          <nav className="flex-1 px-3 py-4 space-y-1">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 rounded-lg" />
+            ))}
+          </nav>
+        </div>
+        <div className="flex-1 flex flex-col">
+          <div className="h-14 border-b border-border" />
+          <ContentSkeleton />
+        </div>
       </div>
     );
   }
+
+  if (!user) return null;
 
   const Sidebar = (
     <aside className="w-[210px] shrink-0 bg-sidebar border-r border-sidebar-border flex flex-col h-screen sticky top-0">
@@ -91,10 +122,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
             <span className="text-xs text-muted-foreground">Live</span>
           </div>
-          <div className="text-sm font-semibold truncate">{community?.name}</div>
-          <div className="text-[10px] text-muted-foreground">
-            {community?.platform} · {community?.total_members.toLocaleString()} members
-          </div>
+          {communityLoading ? (
+            <Skeleton className="h-4 w-32 mb-1" />
+          ) : (
+            <div className="text-sm font-semibold truncate">{community?.name}</div>
+          )}
+          {communityLoading ? (
+            <Skeleton className="h-3 w-24 mt-1" />
+          ) : (
+            <div className="text-[10px] text-muted-foreground">
+              {community?.platform} · {community?.total_members.toLocaleString()} members
+            </div>
+          )}
         </div>
       </div>
     </aside>
@@ -120,13 +159,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Menu size={20} />
             </button>
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-            <span className="text-sm font-semibold truncate max-w-[200px]">{community?.name}</span>
+            {communityLoading ? (
+              <Skeleton className="h-4 w-36" />
+            ) : (
+              <span className="text-sm font-semibold truncate max-w-[200px]">{community?.name}</span>
+            )}
           </div>
           <Button variant="ghost" size="sm" onClick={onLogout}>
             <LogOut size={14} /> ออกจากระบบ
           </Button>
         </header>
-        <main className="flex-1 p-4 md:p-8 overflow-x-hidden">{children}</main>
+        <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
+          {communityLoading ? <ContentSkeleton /> : children}
+        </main>
       </div>
     </div>
   );
