@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCommunity } from "@/lib/use-community";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Swords, Check, X } from "lucide-react";
+import { RefreshCw, Swords, Check, X, Play } from "lucide-react";
 
 type MatchItem = {
   id: string;
@@ -51,6 +51,7 @@ export default function Matchmaking() {
   const [selected, setSelected] = useState<MatchItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [responding, setResponding] = useState(false);
+  const [running, setRunning] = useState(false);
 
   const fetchMatches = async (communityId: string) => {
     const { data } = await supabase
@@ -74,6 +75,44 @@ export default function Matchmaking() {
     setLoading(true);
     await fetchMatches(community.id);
     setLoading(false);
+  };
+
+  const runMatchmaker = async () => {
+    if (!community) return;
+    setRunning(true);
+
+    // Get all users with skill cards in this community
+    const { data: cards } = await supabase
+      .from("skill_cards")
+      .select("user_id")
+      .eq("community_id", community.id);
+
+    if (!cards || cards.length < 2) {
+      toast.error("ต้องการ Skill Card อย่างน้อย 2 ใบเพื่อจับคู่");
+      setRunning(false);
+      return;
+    }
+
+    let created = 0;
+    for (const card of cards) {
+      const res = await fetch("/api/ai/match", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          community_id: community.id,
+          requester_user_id: card.user_id,
+        }),
+      });
+      if (res.ok) created++;
+    }
+
+    setRunning(false);
+    if (created > 0) {
+      toast.success(`สร้างการจับคู่ใหม่ ${created} คู่`);
+      await fetchMatches(community.id);
+    } else {
+      toast.info("ไม่มีการจับคู่ใหม่ (อาจมี pending match อยู่แล้ว)");
+    }
   };
 
   const respond = async (matchId: string, decision: "accepted" | "rejected") => {
@@ -145,9 +184,15 @@ export default function Matchmaking() {
             ผลการจับคู่จาก AI Matchmaker — score คำนวณจาก game / time / role / style
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="hero" size="sm" onClick={runMatchmaker} disabled={running || loading}>
+            <Play size={14} className={running ? "animate-pulse" : ""} />
+            {running ? "กำลังจับคู่..." : "Run Matchmaker"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
