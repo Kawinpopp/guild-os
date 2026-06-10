@@ -55,7 +55,7 @@ export default function OnboardCommunity() {
       total_members: existing.total_members ?? "",
     });
     setWebhook(
-      `https://api.guildos.app/api/webhook/${existing.platform}/${existing.platform_group_id}`,
+      `${window.location.origin}/api/webhook/${existing.platform}/${existing.platform_group_id}`,
     );
   }, [existing, isLoading, router]);
 
@@ -85,7 +85,7 @@ export default function OnboardCommunity() {
       return;
     }
     setCommunityId(data.id);
-    setWebhook(`https://api.guildos.app/api/webhook/${data.platform}/${data.platform_group_id}`);
+    setWebhook(`${window.location.origin}/api/webhook/${data.platform}/${data.platform_group_id}`);
     setStep(2);
   };
 

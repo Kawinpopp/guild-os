@@ -193,12 +193,13 @@ function Integrations({
 }: {
   community: { id: string; platform_group_id: string; platform: string };
 }) {
-  const webhookBase = `https://api.guildos.app/api/webhook/${community.platform}/${community.platform_group_id}`;
+  const webhookUrl = `${window.location.origin}/api/webhook/${community.platform}/${community.platform_group_id}`;
+  const verifyToken = community.platform_group_id;
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border border-border bg-card p-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+        <div className="flex items-center justify-between">
           <div>
             <div className="font-display font-bold text-lg capitalize">
               {community.platform} Webhook
@@ -211,40 +212,53 @@ function Integrations({
             Active
           </span>
         </div>
-        <Label className="text-xs">Webhook URL</Label>
-        <div className="flex gap-2 mt-1">
-          <Input value={webhookBase} readOnly className="h-10 font-mono text-xs" />
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              navigator.clipboard.writeText(webhookBase);
-              toast.success("คัดลอกแล้ว");
-            }}
-          >
-            <Copy size={14} />
-          </Button>
+
+        <div className="space-y-1">
+          <Label className="text-xs">Callback URL</Label>
+          <div className="flex gap-2">
+            <Input value={webhookUrl} readOnly className="h-10 font-mono text-xs" />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                navigator.clipboard.writeText(webhookUrl);
+                toast.success("คัดลอกแล้ว");
+              }}
+            >
+              <Copy size={14} />
+            </Button>
+          </div>
         </div>
+
+        {community.platform === "facebook" && (
+          <div className="space-y-1">
+            <Label className="text-xs">Verify Token</Label>
+            <div className="flex gap-2">
+              <Input value={verifyToken} readOnly className="h-10 font-mono text-xs" />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(verifyToken);
+                  toast.success("คัดลอกแล้ว");
+                }}
+              >
+                <Copy size={14} />
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              ใส่ค่านี้ในช่อง Verify Token ของ Facebook Developer Console
+            </p>
+          </div>
+        )}
+
         <Button
           size="sm"
           variant="outline"
-          className="mt-4"
           onClick={() => toast.success("✅ ทดสอบสำเร็จ")}
         >
           Test Connection
         </Button>
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-6 space-y-3">
-        <h2 className="text-lg">Platform Group ID</h2>
-        <p className="text-xs text-muted-foreground">
-          ID ของกลุ่มบนแพลตฟอร์ม — ใช้ระบุชุมชนเมื่อรับ webhook
-        </p>
-        <Input
-          value={community.platform_group_id}
-          readOnly
-          className="h-10 font-mono text-xs bg-background/40"
-        />
       </div>
     </div>
   );
