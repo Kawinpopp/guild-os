@@ -252,11 +252,7 @@ function Integrations({
           </div>
         )}
 
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => toast.success("✅ ทดสอบสำเร็จ")}
-        >
+        <Button size="sm" variant="outline" onClick={() => toast.success("✅ ทดสอบสำเร็จ")}>
           Test Connection
         </Button>
       </div>
