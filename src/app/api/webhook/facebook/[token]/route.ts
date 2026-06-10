@@ -22,13 +22,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
 }
 
 // Facebook webhook verification challenge
-export async function GET(req: NextRequest) {
+// The platform_group_id UUID in the URL doubles as the verify token —
+// admin enters it in Facebook Developer Console → no extra env var needed.
+export async function GET(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+  const { token: urlToken } = await params;
   const { searchParams } = new URL(req.url);
   const mode = searchParams.get("hub.mode");
-  const token = searchParams.get("hub.verify_token");
+  const verifyToken = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
 
-  if (mode === "subscribe" && token === process.env.FB_VERIFY_TOKEN) {
+  if (mode === "subscribe" && verifyToken === urlToken) {
     return new NextResponse(challenge, { status: 200 });
   }
   return NextResponse.json({ error: "Forbidden" }, { status: 403 });

@@ -185,19 +185,49 @@ export default function OnboardCommunity() {
               <p className="text-sm text-muted-foreground">
                 คัดลอก URL ด้านล่างไปใส่ในแพลตฟอร์มของคุณ (ขั้นตอนนี้ทำได้ภายหลัง)
               </p>
-              <div className="rounded-lg border border-border bg-background p-4 flex items-center gap-3">
-                <code className="text-xs flex-1 truncate text-accent">{webhook}</code>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    navigator.clipboard.writeText(webhook);
-                    toast.success("คัดลอกแล้ว");
-                  }}
-                >
-                  <Copy size={14} /> Copy
-                </Button>
+
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Callback URL
+                </p>
+                <div className="rounded-lg border border-border bg-background p-4 flex items-center gap-3">
+                  <code className="text-xs flex-1 truncate text-accent">{webhook}</code>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(webhook);
+                      toast.success("คัดลอกแล้ว");
+                    }}
+                  >
+                    <Copy size={14} /> Copy
+                  </Button>
+                </div>
               </div>
+
+              {form.platform === "facebook" && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Verify Token
+                  </p>
+                  <div className="rounded-lg border border-border bg-background p-4 flex items-center gap-3">
+                    <code className="text-xs flex-1 truncate text-accent">
+                      {webhook.split("/").pop()}
+                    </code>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(webhook.split("/").pop() ?? "");
+                        toast.success("คัดลอกแล้ว");
+                      }}
+                    >
+                      <Copy size={14} /> Copy
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="rounded-lg bg-background/60 border border-border p-4 text-sm text-muted-foreground space-y-2">
                 <p className="font-semibold text-foreground">วิธีตั้งค่าสำหรับ {form.platform}:</p>
                 {form.platform === "discord" && (
@@ -209,9 +239,11 @@ export default function OnboardCommunity() {
                 )}
                 {form.platform === "facebook" && (
                   <p>
-                    1. ไปที่ Facebook Developer Console
+                    1. ไปที่ Facebook Developer Console → Your App → Webhooks
                     <br />
-                    2. ตั้งค่า Webhook สำหรับ Group และวาง URL ด้านบน
+                    2. วาง <strong>Callback URL</strong> และ <strong>Verify Token</strong> ด้านบน
+                    <br />
+                    3. Subscribe to <code>feed</code> event ของ Group
                   </p>
                 )}
                 {form.platform === "line" && (
