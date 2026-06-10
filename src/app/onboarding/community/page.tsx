@@ -22,17 +22,6 @@ import type { Platform } from "@/interface";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { Check, Copy, ChevronRight } from "lucide-react";
 
-const TIME_SLOTS = ["Morning", "Afternoon", "Evening", "Night", "Late Night"];
-const GAMES = ["ROV", "Valorant", "PUBG", "League of Legends", "Dota 2", "Genshin Impact", "Other"];
-const ROLES = ["Tank", "Support", "Carry", "Mid", "Jungle", "Flex", "Other"];
-const PLAY_STYLES = ["Aggressive", "Teamwork", "Competitive", "Casual"];
-const GOALS = [
-  { value: "rank_push", label: "Push Rank" },
-  { value: "casual", label: "Casual Play" },
-  { value: "tournament", label: "Tournament" },
-  { value: "find_team", label: "Find Team" },
-];
-
 export default function OnboardCommunity() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -44,14 +33,6 @@ export default function OnboardCommunity() {
     platform: Platform | "";
     total_members: number | "";
   }>({ name: "", platform: "", total_members: "" });
-  const [profile, setProfile] = useState<{
-    game: string;
-    role: string;
-    available_time: string[];
-    play_style: string;
-    goal: string;
-    rank: string;
-  }>({ game: "", role: "", available_time: [], play_style: "", goal: "", rank: "" });
   const [communityId, setCommunityId] = useState<string | null>(null);
   const [webhook, setWebhook] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -94,35 +75,6 @@ export default function OnboardCommunity() {
     setStep(2);
   };
 
-  const saveStep2 = async (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    if (!profile.game || !profile.role || !profile.play_style || !profile.goal) {
-      toast.error("กรุณากรอกข้อมูลให้ครบ");
-      return;
-    }
-    if (!user || !communityId) return;
-    setBusy(true);
-
-    const res = await fetch("/api/ai/onboarding", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        community_id: communityId,
-        auth_user_id: user.id,
-        platform: form.platform,
-        ...profile,
-      }),
-    });
-
-    setBusy(false);
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      toast.error(data.error ?? "บันทึก Profile ไม่สำเร็จ");
-      return;
-    }
-    setStep(3);
-  };
-
   const finish = async () => {
     if (!user || !communityId) return;
     setBusy(true);
@@ -141,16 +93,7 @@ export default function OnboardCommunity() {
     router.replace("/dashboard");
   };
 
-  const toggleTime = (slot: string) => {
-    setProfile((prev) => ({
-      ...prev,
-      available_time: prev.available_time.includes(slot)
-        ? prev.available_time.filter((t) => t !== slot)
-        : [...prev.available_time, slot],
-    }));
-  };
-
-  const TOTAL_STEPS = 4;
+  const TOTAL_STEPS = 3;
 
   return (
     <div className="min-h-screen bg-background bg-grid">
@@ -235,146 +178,12 @@ export default function OnboardCommunity() {
             </form>
           )}
 
-          {/* Step 2 — Gaming Profile */}
-          {step === 2 && (
-            <form onSubmit={saveStep2} className="space-y-5">
-              <h2 className="text-2xl">โปรไฟล์เกมของคุณ</h2>
-              <p className="text-sm text-muted-foreground">
-                ข้อมูลนี้ช่วย AI จับคู่เพื่อนร่วมทีมได้แม่นยำขึ้น
-              </p>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>เกมที่เล่น *</Label>
-                  <Select
-                    value={profile.game}
-                    onValueChange={(v) => setProfile({ ...profile, game: v })}
-                  >
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="เลือกเกม" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {GAMES.map((g) => (
-                        <SelectItem key={g} value={g}>
-                          {g}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Role *</Label>
-                  <Select
-                    value={profile.role}
-                    onValueChange={(v) => setProfile({ ...profile, role: v })}
-                  >
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="เลือก Role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ROLES.map((r) => (
-                        <SelectItem key={r} value={r}>
-                          {r}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>เวลาที่ว่าง (เลือกได้หลายช่วง)</Label>
-                <div className="flex flex-wrap gap-2">
-                  {TIME_SLOTS.map((slot) => (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => toggleTime(slot)}
-                      className={`px-3 py-1.5 rounded-lg text-sm border transition ${
-                        profile.available_time.includes(slot)
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "border-border text-muted-foreground hover:border-primary/40"
-                      }`}
-                    >
-                      {slot}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>สไตล์การเล่น *</Label>
-                  <Select
-                    value={profile.play_style}
-                    onValueChange={(v) => setProfile({ ...profile, play_style: v })}
-                  >
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="เลือก" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PLAY_STYLES.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>เป้าหมาย *</Label>
-                  <Select
-                    value={profile.goal}
-                    onValueChange={(v) => setProfile({ ...profile, goal: v })}
-                  >
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="เลือก" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {GOALS.map((g) => (
-                        <SelectItem key={g.value} value={g.value}>
-                          {g.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Rank (ไม่บังคับ)</Label>
-                <Input
-                  value={profile.rank}
-                  onChange={(e) => setProfile({ ...profile, rank: e.target.value })}
-                  className="h-11"
-                  placeholder="เช่น Diamond, Platinum, Gold"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
-                  ย้อนกลับ
-                </Button>
-                <Button
-                  type="submit"
-                  variant="hero"
-                  disabled={
-                    busy || !profile.game || !profile.role || !profile.play_style || !profile.goal
-                  }
-                  className="flex-1"
-                >
-                  {busy ? "กำลังบันทึก..." : "ถัดไป"} <ChevronRight size={18} />
-                </Button>
-              </div>
-            </form>
-          )}
-
-          {/* Step 3 — Webhook */}
-          {step === 3 && webhook && (
+          {/* Step 2 — Webhook */}
+          {step === 2 && webhook && (
             <div className="space-y-5">
               <h2 className="text-2xl">เชื่อมต่อ Webhook</h2>
               <p className="text-sm text-muted-foreground">
-                คัดลอก URL ด้านล่างไปตั้งค่าในแพลตฟอร์มของคุณ (ทำภายหลังก็ได้)
+                คัดลอก URL ด้านล่างไปใส่ในแพลตฟอร์มของคุณ (ขั้นตอนนี้ทำได้ภายหลัง)
               </p>
               <div className="rounded-lg border border-border bg-background p-4 flex items-center gap-3">
                 <code className="text-xs flex-1 truncate text-accent">{webhook}</code>
@@ -414,18 +223,18 @@ export default function OnboardCommunity() {
                 )}
               </div>
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(2)} className="flex-1">
+                <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
                   ย้อนกลับ
                 </Button>
-                <Button variant="hero" onClick={() => setStep(4)} className="flex-1">
+                <Button variant="hero" onClick={() => setStep(3)} className="flex-1">
                   ถัดไป <ChevronRight size={18} />
                 </Button>
               </div>
             </div>
           )}
 
-          {/* Step 4 — Done */}
-          {step === 4 && (
+          {/* Step 3 — Done */}
+          {step === 3 && (
             <div className="space-y-5 text-center">
               <div className="w-16 h-16 rounded-full bg-accent/15 flex items-center justify-center mx-auto">
                 <Check className="text-accent" size={32} />
