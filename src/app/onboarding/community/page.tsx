@@ -42,7 +42,21 @@ export default function OnboardCommunity() {
   }, [loading, user, router]);
 
   useEffect(() => {
-    if (!isLoading && existing?.is_onboarded) router.replace("/dashboard");
+    if (isLoading || !existing) return;
+    if (existing.is_onboarded) {
+      router.replace("/dashboard");
+      return;
+    }
+    // Community created but onboarding not finished — restore state so step 1 skips INSERT
+    setCommunityId(existing.id);
+    setForm({
+      name: existing.name,
+      platform: existing.platform as Platform,
+      total_members: existing.total_members ?? "",
+    });
+    setWebhook(
+      `https://api.guildos.app/api/webhook/${existing.platform}/${existing.platform_group_id}`,
+    );
   }, [existing, isLoading, router]);
 
   const saveStep1 = async (e: React.SyntheticEvent) => {
