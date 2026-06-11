@@ -11,6 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Copy,
   Check,
   X,
@@ -193,24 +200,53 @@ function Integrations({
 }: {
   community: { id: string; platform_group_id: string; platform: string };
 }) {
-  const webhookUrl = `${window.location.origin}/api/webhook/${community.platform}/${community.platform_group_id}`;
+  const [platform, setPlatform] = useState(community.platform);
+  const [saving, setSaving] = useState(false);
+  const webhookUrl = `${window.location.origin}/api/webhook/${platform}/${community.platform_group_id}`;
   const verifyToken = community.platform_group_id;
+  const changed = platform !== community.platform;
+
+  const savePlatform = async () => {
+    setSaving(true);
+    const { error } = await supabase
+      .from("communities")
+      .update({ platform })
+      .eq("id", community.id);
+    setSaving(false);
+    if (error) {
+      toast.error("บันทึกไม่สำเร็จ");
+    } else {
+      toast.success("เปลี่ยนแพลตฟอร์มแล้ว — คัดลอก Webhook URL ใหม่ไปตั้งค่า");
+    }
+  };
 
   return (
     <div className="space-y-5">
       <div className="rounded-xl border border-border bg-card p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <div className="font-display font-bold text-lg capitalize">
-              {community.platform} Webhook
-            </div>
+            <div className="font-display font-bold text-lg capitalize">{platform} Webhook</div>
             <div className="text-xs text-muted-foreground mt-0.5">
-              URL สำหรับรับ event จาก {community.platform}
+              URL สำหรับรับ event จาก {platform}
             </div>
           </div>
           <span className="px-2 py-1 rounded text-[10px] font-semibold uppercase bg-accent/15 text-accent">
             Active
           </span>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs">แพลตฟอร์ม</Label>
+          <Select value={platform} onValueChange={setPlatform}>
+            <SelectTrigger className="h-10">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="facebook">Facebook</SelectItem>
+              <SelectItem value="discord">Discord</SelectItem>
+              <SelectItem value="line">LINE</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-1">
@@ -230,7 +266,7 @@ function Integrations({
           </div>
         </div>
 
-        {community.platform === "facebook" && (
+        {platform === "facebook" && (
           <div className="space-y-1">
             <Label className="text-xs">Verify Token</Label>
             <div className="flex gap-2">
@@ -252,9 +288,11 @@ function Integrations({
           </div>
         )}
 
-        <Button size="sm" variant="outline" onClick={() => toast.success("✅ ทดสอบสำเร็จ")}>
-          Test Connection
-        </Button>
+        {changed && (
+          <Button size="sm" variant="hero" disabled={saving} onClick={savePlatform}>
+            {saving ? "กำลังบันทึก..." : "บันทึกแพลตฟอร์มใหม่"}
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -65,6 +65,22 @@ export default function OnboardCommunity() {
     setBusy(true);
 
     if (communityId) {
+      const { data: current } = await supabase
+        .from("communities")
+        .select("platform, platform_group_id")
+        .eq("id", communityId)
+        .single();
+
+      if (current && current.platform !== form.platform) {
+        await supabase
+          .from("communities")
+          .update({ platform: form.platform })
+          .eq("id", communityId);
+        setWebhook(
+          `${window.location.origin}/api/webhook/${form.platform}/${current.platform_group_id}`,
+        );
+      }
+
       setBusy(false);
       setStep(2);
       return;
