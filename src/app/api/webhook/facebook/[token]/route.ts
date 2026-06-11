@@ -15,7 +15,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
 
   if (!platformUserId) return NextResponse.json({ error: "Missing sender" }, { status: 400 });
 
-  const result = await saveMessage(token, platformUserId, content);
+  const result = await saveMessage(token, platformUserId, content, "facebook");
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
 
   return NextResponse.json({ status: "ok" });

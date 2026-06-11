@@ -38,7 +38,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     const platformUserId = event.source.userId;
     const content = event.message.text;
     if (!platformUserId || !content) continue;
-    await saveMessage(token, platformUserId, content);
+    await saveMessage(token, platformUserId, content, "line");
   }
 
   return NextResponse.json({ status: "ok" });
