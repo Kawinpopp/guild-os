@@ -261,11 +261,35 @@ export default function OnboardCommunity() {
                   </p>
                 )}
                 {form.platform === "line" && (
-                  <p>
-                    1. ไปที่ LINE Developers Console
-                    <br />
-                    2. สร้าง Messaging API channel และวาง URL ใน Webhook
-                  </p>
+                  <ol className="space-y-1 list-decimal list-inside">
+                    <li>
+                      ไปที่{" "}
+                      <span className="text-foreground font-semibold">account.line.biz</span> →
+                      สร้าง <strong>LINE Official Account</strong>
+                    </li>
+                    <li>
+                      ใน LINE Official Account Manager → <strong>Settings</strong> →{" "}
+                      <strong>Messaging API</strong> → กด <strong>Enable Messaging API</strong> →
+                      เลือก Provider
+                    </li>
+                    <li>
+                      ไปที่{" "}
+                      <span className="text-foreground font-semibold">developers.line.biz</span> →
+                      เลือก Channel ที่สร้าง → แท็บ <strong>Basic Settings</strong> → คัดลอก{" "}
+                      <code className="bg-muted px-1 rounded text-xs">Channel Secret</code> → ใส่ใน{" "}
+                      <code className="bg-muted px-1 rounded text-xs">.env</code> ชื่อ{" "}
+                      <code className="bg-muted px-1 rounded text-xs">LINE_CHANNEL_SECRET</code>
+                    </li>
+                    <li>
+                      แท็บ <strong>Messaging API</strong> → Webhook settings → วาง Callback URL
+                      ด้านบน → เปิด <strong>Use webhook</strong> → กด <strong>Verify</strong>
+                    </li>
+                    <li>
+                      ปิด <strong>Auto-reply messages</strong> และ{" "}
+                      <strong>Greeting messages</strong>
+                    </li>
+                    <li>เพิ่ม Bot เข้ากลุ่ม LINE ของคุณ — ระบบจะเริ่มรับข้อความทันที</li>
+                  </ol>
                 )}
               </div>
               <div className="flex gap-3">
