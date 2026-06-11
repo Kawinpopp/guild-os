@@ -46,7 +46,12 @@ async function callModerate(
   }
 }
 
-export async function saveMessage(token: string, platformUserId: string, content: string, platform: "facebook" | "discord" | "line") {
+export async function saveMessage(
+  token: string,
+  platformUserId: string,
+  content: string,
+  platform: "facebook" | "discord" | "line",
+) {
   if (!content) return { ok: true };
 
   const supabase = getSupabase();
