@@ -263,9 +263,8 @@ export default function OnboardCommunity() {
                 {form.platform === "line" && (
                   <ol className="space-y-1 list-decimal list-inside">
                     <li>
-                      ไปที่{" "}
-                      <span className="text-foreground font-semibold">account.line.biz</span> →
-                      สร้าง <strong>LINE Official Account</strong>
+                      ไปที่ <span className="text-foreground font-semibold">account.line.biz</span>{" "}
+                      → สร้าง <strong>LINE Official Account</strong>
                     </li>
                     <li>
                       ใน LINE Official Account Manager → <strong>Settings</strong> →{" "}
