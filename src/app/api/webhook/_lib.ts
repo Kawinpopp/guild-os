@@ -68,7 +68,9 @@ async function runMatch(communityId: string, requesterUserId: string): Promise<v
 
   const { data: cards } = await supabase
     .from("skill_cards")
-    .select("user_id, game, role, available_time, play_style, goal, rank, time_vector, style_vector")
+    .select(
+      "user_id, game, role, available_time, play_style, goal, rank, time_vector, style_vector",
+    )
     .eq("community_id", communityId);
 
   if (!cards || cards.length < 2) return;
