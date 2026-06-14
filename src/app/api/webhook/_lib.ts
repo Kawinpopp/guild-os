@@ -10,6 +10,90 @@ export function getSupabase() {
   return _supabase;
 }
 
+type SkillCardRow = {
+  user_id: string;
+  game: string;
+  role: string;
+  available_time: unknown;
+  play_style: string;
+  goal: string;
+  rank: string | null;
+  time_vector: unknown;
+  style_vector: unknown;
+};
+
+type MatchResult = {
+  matched_user_id: string;
+  game: string;
+  match_score: number;
+  game_score: number;
+  time_score: number;
+  role_score: number;
+  style_score: number;
+};
+
+async function callMatchAI(
+  requester: SkillCardRow,
+  candidates: SkillCardRow[],
+  communityId: string,
+): Promise<MatchResult | null> {
+  const aiUrl = process.env.AI_API_URL;
+  const aiSecret = process.env.AI_BOT_SECRET;
+  if (!aiUrl || !aiSecret) return null;
+  try {
+    const res = await fetch(`${aiUrl}/match`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-bot-secret": aiSecret },
+      body: JSON.stringify({ community_id: communityId, requester, candidates }),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as MatchResult;
+  } catch {
+    return null;
+  }
+}
+
+async function runMatch(communityId: string, requesterUserId: string): Promise<void> {
+  const supabase = getSupabase();
+
+  const { data: existing } = await supabase
+    .from("matches")
+    .select("id")
+    .eq("community_id", communityId)
+    .eq("requester_id", requesterUserId)
+    .in("status", ["pending", "accepted", "expired"])
+    .maybeSingle();
+
+  if (existing) return;
+
+  const { data: cards } = await supabase
+    .from("skill_cards")
+    .select("user_id, game, role, available_time, play_style, goal, rank, time_vector, style_vector")
+    .eq("community_id", communityId);
+
+  if (!cards || cards.length < 2) return;
+
+  const requesterCard = cards.find((c) => c.user_id === requesterUserId);
+  if (!requesterCard) return;
+
+  const candidates = cards.filter((c) => c.user_id !== requesterUserId) as SkillCardRow[];
+  const result = await callMatchAI(requesterCard as SkillCardRow, candidates, communityId);
+  if (!result) return;
+
+  await supabase.from("matches").insert({
+    community_id: communityId,
+    requester_id: requesterUserId,
+    matched_user_id: result.matched_user_id,
+    game: result.game,
+    match_score: result.match_score,
+    game_score: result.game_score,
+    time_score: result.time_score,
+    role_score: result.role_score,
+    style_score: result.style_score,
+    status: "pending",
+  });
+}
+
 type ModerateResult = {
   label: string;
   confidence_score: number;
@@ -111,6 +195,10 @@ export async function saveMessage(
 
       if (mod.action_taken === "warn") {
         await supabase.rpc("increment_warning" as never, { p_user_id: user.id });
+      }
+
+      if (mod.label === "matching_request") {
+        await runMatch(community.id, user.id);
       }
     }
   }

@@ -81,11 +81,14 @@ export default function Matchmaking() {
     if (!community) return;
     setRunning(true);
 
-    // Get all users with skill cards in this community
-    const { data: cards } = await supabase
-      .from("skill_cards")
-      .select("user_id")
-      .eq("community_id", community.id);
+    const [{ data: cards }, { data: pendingMatches }] = await Promise.all([
+      supabase.from("skill_cards").select("user_id").eq("community_id", community.id),
+      supabase
+        .from("matches")
+        .select("requester_id")
+        .eq("community_id", community.id)
+        .in("status", ["pending", "accepted", "expired"]),
+    ]);
 
     if (!cards || cards.length < 2) {
       toast.error("ต้องการ Skill Card อย่างน้อย 2 ใบเพื่อจับคู่");
@@ -93,8 +96,17 @@ export default function Matchmaking() {
       return;
     }
 
+    const pendingIds = new Set((pendingMatches ?? []).map((m) => m.requester_id));
+    const toMatch = cards.filter((c) => !pendingIds.has(c.user_id));
+
+    if (toMatch.length === 0) {
+      toast.info("ทุกคนมี pending match อยู่แล้ว");
+      setRunning(false);
+      return;
+    }
+
     let created = 0;
-    for (const card of cards) {
+    for (const card of toMatch) {
       const res = await fetch("/api/ai/match", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -111,7 +123,7 @@ export default function Matchmaking() {
       toast.success(`สร้างการจับคู่ใหม่ ${created} คู่`);
       await fetchMatches(community.id);
     } else {
-      toast.info("ไม่มีการจับคู่ใหม่ (อาจมี pending match อยู่แล้ว)");
+      toast.info("ไม่มีการจับคู่ใหม่");
     }
   };
 
