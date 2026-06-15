@@ -89,28 +89,9 @@ function AIConfig() {
   const [threshold, setThreshold] = useState(0.85);
   const [autoRemove, setAutoRemove] = useState(true);
   const [timeWindow, setTimeWindow] = useState(60);
-  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (!community) return;
-    const cfg = (community as unknown as { matchmaker_config?: { time_window?: number } })
-      .matchmaker_config;
-    if (cfg?.time_window) setTimeWindow(cfg.time_window);
-  }, [community]);
-
-  const save = async () => {
-    if (!community) return;
-    setSaving(true);
-    const { error } = await supabase
-      .from("communities")
-      .update({ matchmaker_config: { time_window: timeWindow } } as never)
-      .eq("id", community.id);
-    setSaving(false);
-    if (error) {
-      toast.error("บันทึกไม่สำเร็จ");
-    } else {
-      toast.success("บันทึก Time Window แล้ว");
-    }
+  const save = () => {
+    // matchmaker_config not yet persisted
   };
 
   return (
@@ -188,8 +169,8 @@ function AIConfig() {
         </div>
       </div>
 
-      <Button variant="hero" onClick={save} disabled={saving}>
-        {saving ? "กำลังบันทึก..." : "บันทึกการตั้งค่า"}
+      <Button variant="hero" onClick={save}>
+        บันทึกการตั้งค่า
       </Button>
     </div>
   );

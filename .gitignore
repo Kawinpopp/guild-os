@@ -36,3 +36,6 @@ dist-ssr
 .next/*
 
 test_data.sql
+
+# Supabase
+supabase/.temp
