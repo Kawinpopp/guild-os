@@ -19,7 +19,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useCommunity } from "@/lib/use-community";
 import type { Platform } from "@/interface";
-import type { TablesInsert } from "@/integrations/supabase/types";
 import { Check, Copy, ChevronRight } from "lucide-react";
 
 export default function OnboardCommunity() {
@@ -43,20 +42,7 @@ export default function OnboardCommunity() {
 
   useEffect(() => {
     if (isLoading || !existing) return;
-    if (existing.is_onboarded) {
-      router.replace("/dashboard");
-      return;
-    }
-    // Community created but onboarding not finished — restore state so step 1 skips INSERT
-    setCommunityId(existing.id);
-    setForm({
-      name: existing.name,
-      platform: existing.platform as Platform,
-      total_members: existing.total_members ?? "",
-    });
-    setWebhook(
-      `${window.location.origin}/api/webhook/${existing.platform}/${existing.platform_group_id}`,
-    );
+    router.replace("/dashboard");
   }, [existing, isLoading, router]);
 
   const saveStep1 = async (e: React.SyntheticEvent) => {
@@ -86,37 +72,31 @@ export default function OnboardCommunity() {
       return;
     }
 
-    const payload: TablesInsert<"communities"> = {
-      admin_auth_id: user.id,
-      name: form.name,
-      platform: form.platform,
-      platform_group_id: crypto.randomUUID(),
-      total_members: form.total_members || 0,
-    };
-
-    const { data, error } = await supabase.from("communities").insert(payload).select().single();
-    setBusy(false);
+    const { data, error } = await supabase
+      .from("communities")
+      .insert({
+        name: form.name,
+        platform: form.platform,
+        platform_group_id: crypto.randomUUID(),
+        total_members: form.total_members || 0,
+      } as never)
+      .select()
+      .single();
     if (error) {
+      setBusy(false);
       toast.error(error.message);
       return;
     }
+    await supabase.auth.updateUser({ data: { community_id: data.id } });
     setCommunityId(data.id);
     setWebhook(`${window.location.origin}/api/webhook/${data.platform}/${data.platform_group_id}`);
+    setBusy(false);
     setStep(2);
   };
 
   const finish = async () => {
     if (!user || !communityId) return;
     setBusy(true);
-    const { error } = await supabase
-      .from("communities")
-      .update({ is_onboarded: true })
-      .eq("id", communityId);
-    if (error) {
-      setBusy(false);
-      toast.error(error.message);
-      return;
-    }
     await queryClient.invalidateQueries({ queryKey: ["community", user.id] });
     setBusy(false);
     toast.success("เริ่มต้นใช้งาน GuildOS!");
