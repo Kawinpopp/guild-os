@@ -15,13 +15,11 @@ export type Database = {
           platform: string;
           platform_group_id: string;
           admin_user_id: string | null;
-          admin_auth_id: string | null;
           subscription_tier: string;
           total_members: number;
           last_synced_at: string | null;
           created_at: string;
           is_active: boolean;
-          is_onboarded: boolean;
         };
         Insert: {
           id?: string;
@@ -29,13 +27,11 @@ export type Database = {
           platform: string;
           platform_group_id: string;
           admin_user_id?: string | null;
-          admin_auth_id?: string | null;
           subscription_tier?: string;
           total_members?: number;
           last_synced_at?: string | null;
           created_at?: string;
           is_active?: boolean;
-          is_onboarded?: boolean;
         };
         Update: {
           id?: string;
@@ -43,13 +39,11 @@ export type Database = {
           platform?: string;
           platform_group_id?: string;
           admin_user_id?: string | null;
-          admin_auth_id?: string | null;
           subscription_tier?: string;
           total_members?: number;
           last_synced_at?: string | null;
           created_at?: string;
           is_active?: boolean;
-          is_onboarded?: boolean;
         };
         Relationships: [
           {
@@ -476,7 +470,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      is_community_admin: { Args: { _community_id: string }; Returns: boolean };
+      [_ in never]: never;
     };
     Enums: {
       [_ in never]: never;

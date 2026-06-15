@@ -90,9 +90,7 @@ function AIConfig() {
   const [autoRemove, setAutoRemove] = useState(true);
   const [timeWindow, setTimeWindow] = useState(60);
 
-  const save = () => {
-    // matchmaker_config not yet persisted
-  };
+  const save = () => {};
 
   return (
     <div className="space-y-6">

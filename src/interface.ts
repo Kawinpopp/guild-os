@@ -16,13 +16,11 @@ export interface Community {
   platform: Platform;
   platform_group_id: string;
   admin_user_id: string | null;
-  admin_auth_id: string | null;
   subscription_tier: SubscriptionTier;
   total_members: number;
   last_synced_at: string | null;
   created_at: string;
   is_active: boolean;
-  is_onboarded: boolean;
 }
 
 export interface User {
