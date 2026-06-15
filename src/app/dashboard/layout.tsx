@@ -58,13 +58,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [loading, user, router]);
 
   useEffect(() => {
-    if (
-      !loading &&
-      user &&
-      !communityLoading &&
-      community !== undefined &&
-      !community?.is_onboarded
-    ) {
+    if (!loading && user && !communityLoading && community === null) {
       router.push("/onboarding/community");
     }
   }, [loading, user, communityLoading, community, router]);
