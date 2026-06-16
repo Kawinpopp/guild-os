@@ -1,106 +1,25 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Logo } from "@/components/Logo";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Bot,
   Users,
   BarChart3,
   Shield,
   Sparkles,
-  MessageSquareText,
   Webhook,
   Activity,
   Trophy,
   Check,
-  Menu,
-  X,
   ArrowRight,
 } from "lucide-react";
+import { LandingNavBar } from "@/components/LandingNavBar";
+import { ContactSection } from "@/components/ContactSection";
 
 export default function Landing() {
-  const [navOpen, setNavOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
-      {/* NAVBAR */}
-      <header
-        className={`fixed top-0 inset-x-0 z-50 transition-all ${scrolled ? "backdrop-blur-xl bg-background/70 border-b border-border" : ""}`}
-      >
-        <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
-          <Logo />
-          <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
-            <a href="#features" className="hover:text-foreground transition">
-              Features
-            </a>
-            <a href="#pricing" className="hover:text-foreground transition">
-              Pricing
-            </a>
-            <a href="#contact-form" className="hover:text-foreground transition">
-              Contact
-            </a>
-            <Link href="/login" className="hover:text-foreground transition">
-              เข้าสู่ระบบ
-            </Link>
-          </nav>
-          <div className="hidden md:block">
-            <a href="#contact-form">
-              <Button variant="hero" size="sm">
-                ทดลองใช้ฟรี
-              </Button>
-            </a>
-          </div>
-          <button
-            className="md:hidden p-2 text-foreground"
-            onClick={() => setNavOpen(!navOpen)}
-            aria-label="menu"
-          >
-            {navOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
-        </div>
-        {navOpen && (
-          <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl">
-            <div className="px-5 py-4 flex flex-col gap-4 text-sm">
-              <a href="#features" onClick={() => setNavOpen(false)}>
-                Features
-              </a>
-              <a href="#pricing" onClick={() => setNavOpen(false)}>
-                Pricing
-              </a>
-              <a href="#contact-form" onClick={() => setNavOpen(false)}>
-                Contact
-              </a>
-              <Link href="/login" onClick={() => setNavOpen(false)}>
-                เข้าสู่ระบบ
-              </Link>
-              <a href="#contact-form" onClick={() => setNavOpen(false)}>
-                <Button variant="hero" size="sm" className="w-full">
-                  ทดลองใช้ฟรี
-                </Button>
-              </a>
-            </div>
-          </div>
-        )}
-      </header>
+      <LandingNavBar />
 
       {/* HERO */}
       <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 bg-grid">
@@ -426,129 +345,5 @@ export default function Landing() {
         </div>
       </footer>
     </div>
-  );
-}
-
-function ContactSection() {
-  const [form, setForm] = useState({
-    admin_name: "",
-    group_name: "",
-    platform: "",
-    member_count: "",
-    contact: "",
-  });
-  const [submitting, setSubmitting] = useState(false);
-
-  const submit = async (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    if (!form.admin_name || !form.group_name || !form.platform || !form.contact) {
-      toast.error("กรุณากรอกข้อมูลให้ครบ");
-      return;
-    }
-    setSubmitting(true);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await supabase.from("communities").select("id").limit(0);
-    setSubmitting(false);
-    if (error) {
-      toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่");
-      return;
-    }
-    toast.success("✓ ได้รับข้อมูลแล้ว! ทีมเราจะติดต่อกลับภายใน 24 ชั่วโมง");
-    setForm({
-      admin_name: "",
-      group_name: "",
-      platform: "",
-      member_count: "",
-      contact: "",
-    });
-  };
-
-  return (
-    <section id="contact-form" className="py-24 border-t border-border bg-card/40">
-      <div className="max-w-2xl mx-auto px-5">
-        <div className="text-center mb-10">
-          <MessageSquareText className="mx-auto text-accent mb-4" size={36} />
-          <h2 className="text-3xl md:text-4xl mb-3">สนใจทดลองใช้?</h2>
-          <p className="text-muted-foreground">
-            กรอกข้อมูลด้านล่าง ทีมเราจะติดต่อกลับภายใน 24 ชั่วโมง
-          </p>
-        </div>
-        <form
-          onSubmit={submit}
-          className="rounded-2xl border border-border bg-card p-6 md:p-8 space-y-5"
-        >
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>ชื่อแอดมิน *</Label>
-              <Input
-                value={form.admin_name}
-                onChange={(e) => setForm({ ...form, admin_name: e.target.value })}
-                placeholder="ชื่อของคุณ"
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>ชื่อกลุ่ม *</Label>
-              <Input
-                value={form.group_name}
-                onChange={(e) => setForm({ ...form, group_name: e.target.value })}
-                placeholder="เช่น Thailand ROV Pro"
-                className="h-11"
-              />
-            </div>
-          </div>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>แพลตฟอร์ม *</Label>
-              <Select
-                value={form.platform}
-                onValueChange={(v) => setForm({ ...form, platform: v })}
-              >
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="เลือก" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Facebook">Facebook Group</SelectItem>
-                  <SelectItem value="Discord">Discord Server</SelectItem>
-                  <SelectItem value="LINE">LINE OpenChat</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>จำนวนสมาชิก</Label>
-              <Select
-                value={form.member_count}
-                onValueChange={(v) => setForm({ ...form, member_count: v })}
-              >
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="เลือก" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="<5k">น้อยกว่า 5,000</SelectItem>
-                  <SelectItem value="5k-30k">5,000 – 30,000</SelectItem>
-                  <SelectItem value="30k-150k">30,000 – 150,000</SelectItem>
-                  <SelectItem value=">150k">มากกว่า 150,000</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>เบอร์โทร / LINE ID *</Label>
-            <Input
-              value={form.contact}
-              onChange={(e) => setForm({ ...form, contact: e.target.value })}
-              placeholder="089-xxx-xxxx หรือ LINE: @yourname"
-              className="h-11"
-            />
-          </div>
-          <Button type="submit" variant="hero" size="lg" disabled={submitting} className="w-full">
-            {submitting ? "กำลังส่ง..." : "ส่งข้อมูล"}
-          </Button>
-          <p className="text-xs text-center text-muted-foreground">
-            เราจะไม่ส่งสแปม และไม่เผยแพร่ข้อมูลของคุณ
-          </p>
-        </form>
-      </div>
-    </section>
   );
 }
