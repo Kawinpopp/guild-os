@@ -165,6 +165,13 @@ export async function saveMessage(
 
   if (userError || !user) return { ok: false, status: 500, error: "Failed to resolve user" };
 
+  await supabase
+    .from("community_members")
+    .upsert(
+      { community_id: community.id, user_id: user.id, role: "member" },
+      { onConflict: "community_id,user_id" },
+    );
+
   const { data: post } = await supabase
     .from("posts")
     .insert({

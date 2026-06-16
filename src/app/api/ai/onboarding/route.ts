@@ -67,6 +67,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to resolve user" }, { status: 500 });
   }
 
+  await supabase
+    .from("community_members")
+    .upsert(
+      { community_id: body.community_id, user_id: user.id, role: "admin" },
+      { onConflict: "community_id,user_id" },
+    );
+
   // Optionally call AI to get vectors
   const aiResult = await callOnboardingAI(body);
 
