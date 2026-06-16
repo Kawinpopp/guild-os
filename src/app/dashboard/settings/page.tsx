@@ -179,6 +179,7 @@ function Integrations({
 }: {
   community: { id: string; platform_group_id: string; platform: string };
 }) {
+  const joinLink = `${typeof window !== "undefined" ? window.location.origin : ""}/join/${community.id}`;
   const [platform, setPlatform] = useState(community.platform);
   const [saving, setSaving] = useState(false);
   const webhookUrl = `${window.location.origin}/api/webhook/${platform}/${community.platform_group_id}`;
@@ -272,6 +273,32 @@ function Integrations({
             {saving ? "กำลังบันทึก..." : "บันทึกแพลตฟอร์มใหม่"}
           </Button>
         )}
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <Link2 size={18} className="text-primary" />
+          <h2 className="text-lg">Invite Link</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          แชร์ลิ้งนี้ให้สมาชิก เพื่อให้กรอก Skill Card ผ่านหน้าเว็บโดยไม่ต้องสมัครบัญชี
+        </p>
+        <div className="space-y-1">
+          <Label className="text-xs">Join Link</Label>
+          <div className="flex gap-2">
+            <Input value={joinLink} readOnly className="h-10 font-mono text-xs" />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                navigator.clipboard.writeText(joinLink);
+                toast.success("คัดลอกแล้ว");
+              }}
+            >
+              <Copy size={14} />
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

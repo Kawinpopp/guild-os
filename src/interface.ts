@@ -1,4 +1,4 @@
-export type Platform = "facebook" | "discord" | "line";
+export type Platform = "facebook" | "discord" | "line" | "web";
 export type SubscriptionTier = "free" | "starter" | "pro" | "enterprise";
 export type UserStatus = "active" | "warned" | "muted" | "banned";
 export type MemberRole = "member" | "moderator" | "admin";
