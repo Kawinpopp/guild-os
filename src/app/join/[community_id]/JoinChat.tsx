@@ -248,11 +248,7 @@ export default function JoinChat({
               className="h-11 text-sm"
               autoFocus
             />
-            <Button
-              onClick={handleIgnSubmit}
-              className="h-11 px-4"
-              disabled={!inputVal.trim()}
-            >
+            <Button onClick={handleIgnSubmit} className="h-11 px-4" disabled={!inputVal.trim()}>
               <Send size={15} />
             </Button>
           </div>
@@ -296,7 +292,9 @@ export default function JoinChat({
             <Input
               value={inputVal}
               onChange={(e) => setInputVal(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !inputVal.trim() ? handleRankSubmit(true) : handleRankSubmit()}
+              onKeyDown={(e) =>
+                e.key === "Enter" && !inputVal.trim() ? handleRankSubmit(true) : handleRankSubmit()
+              }
               placeholder="เช่น Diamond, Mythic, Radiant..."
               className="h-11 text-sm"
               autoFocus
@@ -454,9 +452,7 @@ export default function JoinChat({
       </div>
 
       {/* Input area */}
-      <div className="border-t border-border p-4 flex-shrink-0 bg-card">
-        {renderControls()}
-      </div>
+      <div className="border-t border-border p-4 flex-shrink-0 bg-card">{renderControls()}</div>
     </div>
   );
 }

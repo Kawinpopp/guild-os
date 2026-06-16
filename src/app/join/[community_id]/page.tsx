@@ -6,11 +6,7 @@ import JoinChat from "./JoinChat";
 
 export const dynamic = "force-dynamic";
 
-export default async function JoinPage({
-  params,
-}: {
-  params: Promise<{ community_id: string }>;
-}) {
+export default async function JoinPage({ params }: { params: Promise<{ community_id: string }> }) {
   const { community_id } = await params;
   const supabase = getSupabase();
 

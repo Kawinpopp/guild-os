@@ -56,7 +56,10 @@ export async function POST(req: NextRequest) {
   const session = token ? verifySession(token) : null;
 
   if (!session || session.community_id !== body.community_id) {
-    return NextResponse.json({ error: "Unauthorized — OAuth session missing or expired" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Unauthorized — OAuth session missing or expired" },
+      { status: 401 },
+    );
   }
 
   const supabase = getSupabase();

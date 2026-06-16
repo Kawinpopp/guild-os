@@ -27,7 +27,12 @@ export async function GET(req: NextRequest) {
 
   const tokenRes = await fetch(
     `https://graph.facebook.com/v18.0/oauth/access_token?` +
-      new URLSearchParams({ client_id: appId, client_secret: appSecret, redirect_uri: redirectUri, code }),
+      new URLSearchParams({
+        client_id: appId,
+        client_secret: appSecret,
+        redirect_uri: redirectUri,
+        code,
+      }),
   );
 
   if (!tokenRes.ok) {
