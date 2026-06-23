@@ -30,11 +30,11 @@ async function callMatchAI(
   candidates: SkillCardRow[],
   communityId: string,
 ): Promise<MatchResult | null> {
-  const aiUrl = process.env.AI_API_URL;
+  const aiUrl = process.env.MATCHMAKER_API_URL;
   const aiSecret = process.env.AI_BOT_SECRET;
   if (!aiUrl || !aiSecret) return null;
   try {
-    const res = await fetch(`${aiUrl}/match`, {
+    const res = await fetch(aiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-bot-secret": aiSecret },
       body: JSON.stringify({ community_id: communityId, requester, candidates }),

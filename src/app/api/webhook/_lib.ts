@@ -41,7 +41,7 @@ async function callMatchAI(
   const aiSecret = process.env.AI_BOT_SECRET;
   if (!aiUrl || !aiSecret) return null;
   try {
-    const res = await fetch(`${aiUrl}/match`, {
+    const res = await fetch(aiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-bot-secret": aiSecret },
       body: JSON.stringify({ community_id: communityId, requester, candidates }),
