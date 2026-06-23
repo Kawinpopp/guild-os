@@ -37,7 +37,7 @@ async function callMatchAI(
   candidates: SkillCardRow[],
   communityId: string,
 ): Promise<MatchResult | null> {
-  const aiUrl = process.env.AI_API_URL;
+  const aiUrl = process.env.MATCHMAKER_API_URL;
   const aiSecret = process.env.AI_BOT_SECRET;
   if (!aiUrl || !aiSecret) return null;
   try {
@@ -111,7 +111,7 @@ async function callModerate(
   userId: string,
   postId: string,
 ): Promise<ModerateResult | null> {
-  const aiUrl = process.env.AI_API_URL;
+  const aiUrl = process.env.MODERATOR_API_URL;
   const aiSecret = process.env.AI_BOT_SECRET;
   if (!aiUrl || !aiSecret) return null;
   try {
