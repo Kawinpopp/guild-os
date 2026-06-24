@@ -7,12 +7,7 @@ interface Props {
   label: string;
 }
 
-function animateCount(
-  from: number,
-  to: number,
-  duration: number,
-  onUpdate: (n: number) => void
-) {
+function animateCount(from: number, to: number, duration: number, onUpdate: (n: number) => void) {
   const start = performance.now();
   const tick = (now: number) => {
     const t = Math.min(1, (now - start) / duration);
@@ -54,7 +49,7 @@ export function StatCounter({ value, label }: Props) {
           animateCount(0, target, 1200, (n) => setDisplay(`${n}${suffix}`));
         }
       },
-      { threshold: 0.4 }
+      { threshold: 0.4 },
     );
 
     observer.observe(el);
