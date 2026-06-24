@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-export function Logo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
-  const dim = size === "sm" ? 24 : size === "lg" ? 40 : 32;
+export function Logo({ size = "lg" }: { size?: "sm" | "md" | "lg" }) {
+  const dim = size === "sm" ? 24 : size === "lg" ? 48 : 36;
   const text = size === "sm" ? "text-lg" : size === "lg" ? "text-2xl" : "text-xl";
   return (
     <Link href="/" className="flex items-center gap-2 group">
