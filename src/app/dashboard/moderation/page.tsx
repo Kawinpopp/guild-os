@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCommunity } from "@/lib/use-community";
 import { Button } from "@/components/ui/button";
-import { Check, X, Eye, RefreshCw, Shield } from "lucide-react";
+import { Check, X, Eye, RefreshCw, Shield, Clock, Target } from "lucide-react";
 
 type ModerationItem = {
   id: string;
@@ -20,6 +20,8 @@ type ModerationItem = {
 };
 
 type Filter = "pending" | "reviewed" | "all";
+
+const AVG_REVIEW_SECONDS_PER_POST = 30;
 
 const LABEL_COLOR: Record<string, string> = {
   spam: "bg-destructive/15 text-destructive",
@@ -42,6 +44,13 @@ export default function Moderation() {
   const [selected, setSelected] = useState<ModerationItem | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // 30-day metrics for KPI cards
+  const [stats30d, setStats30d] = useState({
+    timeSavedHours: 0,
+    spamBlocked: 0,
+    avgConfidence: 0,
+  });
+
   const load = async () => {
     if (!community) return;
     setLoading(true);
@@ -62,8 +71,37 @@ export default function Moderation() {
     setLoading(false);
   };
 
+  // Load 30-day aggregates (for Time Saved + Accuracy)
+  const loadStats = async () => {
+    if (!community) return;
+    const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    const { data } = await supabase
+      .from("moderation_logs")
+      .select("action_taken, confidence_score")
+      .eq("community_id", community.id)
+      .gte("created_at", since30d);
+
+    const rows = data ?? [];
+    const removed = rows.filter((r) => r.action_taken === "remove").length;
+    const timeSavedHours = +(removed * AVG_REVIEW_SECONDS_PER_POST / 3600).toFixed(1);
+
+    const scores = rows.map((r) => r.confidence_score).filter((s) => s != null);
+    const avgConfidence =
+      scores.length > 0
+        ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 100)
+        : 0;
+
+    setStats30d({
+      timeSavedHours,
+      spamBlocked: removed,
+      avgConfidence,
+    });
+  };
+
   useEffect(() => {
     load();
+    loadStats();
   }, [community]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -78,7 +116,10 @@ export default function Moderation() {
           table: "moderation_logs",
           filter: `community_id=eq.${community.id}`,
         },
-        () => load(),
+        () => {
+          load();
+          loadStats();
+        },
       )
       .subscribe();
     return () => {
@@ -141,26 +182,65 @@ export default function Moderation() {
           <h1 className="text-3xl mb-1">AI Moderation</h1>
           <p className="text-sm text-muted-foreground">ตรวจจับและจัดการโพสต์ที่ไม่เหมาะสมด้วย AI</p>
         </div>
-        <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={() => { load(); loadStats(); }} disabled={loading}>
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Refresh
         </Button>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          { label: "Needs Review", value: counts.pending, color: "text-warning", icon: Shield },
-          { label: "Reviewed", value: counts.reviewed, color: "text-accent", icon: Check },
-          { label: "Total Flagged", value: items.length, color: "text-destructive", icon: X },
-        ].map((s) => (
-          <div key={s.label} className="rounded-xl border border-border bg-card p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground">{s.label}</span>
-              <s.icon size={14} className={s.color} />
-            </div>
-            <div className={`font-display text-3xl font-bold ${s.color}`}>{s.value}</div>
+      {/* Stats row — 5 cards (3 existing + 2 new KPI) */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Existing 3 */}
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground">Needs Review</span>
+            <Shield size={14} className="text-warning" />
           </div>
-        ))}
+          <div className="font-display text-3xl font-bold text-warning">{counts.pending}</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground">Reviewed</span>
+            <Check size={14} className="text-accent" />
+          </div>
+          <div className="font-display text-3xl font-bold text-accent">{counts.reviewed}</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground">Total Flagged</span>
+            <X size={14} className="text-destructive" />
+          </div>
+          <div className="font-display text-3xl font-bold text-destructive">{items.length}</div>
+        </div>
+
+        {/* NEW: Time Saved KPI */}
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground">Time Saved</span>
+            <Clock size={14} className="text-primary" />
+          </div>
+          <div className="font-display text-3xl font-bold text-primary">
+            {stats30d.timeSavedHours}
+            <span className="text-base ml-1 text-muted-foreground">ชม.</span>
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-1">
+            จาก {stats30d.spamBlocked} โพสต์ · 30 วัน
+          </div>
+        </div>
+
+        {/* NEW: AI Accuracy KPI */}
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground">AI Confidence</span>
+            <Target size={14} className="text-accent" />
+          </div>
+          <div className="font-display text-3xl font-bold text-accent">
+            {stats30d.avgConfidence}
+            <span className="text-base ml-1 text-muted-foreground">%</span>
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-1">
+            ค่าเฉลี่ย · 30 วัน
+          </div>
+        </div>
       </div>
 
       {/* Filter tabs */}
@@ -196,7 +276,6 @@ export default function Moderation() {
               key={item.id}
               className="px-5 py-4 flex items-start gap-4 hover:bg-background/40 transition"
             >
-              {/* Score badge */}
               <div
                 className={`shrink-0 w-12 h-12 rounded-lg flex flex-col items-center justify-center text-xs font-bold border ${
                   item.confidence_score >= 0.85
@@ -281,7 +360,7 @@ export default function Moderation() {
         </ul>
       </div>
 
-      {/* Detail drawer */}
+      {/* Detail drawer (unchanged) */}
       {selected && (
         <div className="fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/60" onClick={() => setSelected(null)} />

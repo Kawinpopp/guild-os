@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCommunity } from "@/lib/use-community";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Swords, Check, X, Play } from "lucide-react";
+import { RefreshCw, Swords, Check, X, Play, Star, TrendingUp } from "lucide-react";
 
 type MatchItem = {
   id: string;
@@ -53,6 +53,12 @@ export default function Matchmaking() {
   const [responding, setResponding] = useState(false);
   const [running, setRunning] = useState(false);
 
+  // KPI #8: Avg Match Rating (30 days)
+  const [ratingStats, setRatingStats] = useState({
+    avgRating: null as number | null,
+    totalReviews: 0,
+  });
+
   const fetchMatches = async (communityId: string) => {
     const { data } = await supabase
       .from("matches")
@@ -70,10 +76,30 @@ export default function Matchmaking() {
     setMatches((data ?? []) as unknown as MatchItem[]);
   };
 
+  // Load match_ratings (30 days)
+  const fetchRatings = async () => {
+    const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data } = await supabase
+      .from("match_ratings")
+      .select("rating")
+      .gte("created_at", since30d);
+
+    const ratings = (data ?? []).map((r) => r.rating);
+    const avg =
+      ratings.length > 0
+        ? +(ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+        : null;
+
+    setRatingStats({
+      avgRating: avg,
+      totalReviews: ratings.length,
+    });
+  };
+
   const refresh = async () => {
     if (!community) return;
     setLoading(true);
-    await fetchMatches(community.id);
+    await Promise.all([fetchMatches(community.id), fetchRatings()]);
     setLoading(false);
   };
 
@@ -154,6 +180,7 @@ export default function Matchmaking() {
   useEffect(() => {
     if (!community) return;
     fetchMatches(community.id);
+    fetchRatings();
 
     const channel = supabase
       .channel(`matches:${community.id}`)
@@ -182,6 +209,10 @@ export default function Matchmaking() {
     rejected: matches.filter((m) => m.status === "rejected").length,
   };
 
+  const totalResponded = counts.accepted + counts.rejected;
+  const acceptanceRate =
+    totalResponded > 0 ? Math.round((counts.accepted / totalResponded) * 100) : 0;
+
   const avgScore =
     matches.length > 0
       ? (matches.reduce((s, m) => s + m.match_score, 0) / matches.length).toFixed(2)
@@ -207,19 +238,65 @@ export default function Matchmaking() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: "Pending", value: counts.pending, color: "text-warning" },
-          { label: "Accepted", value: counts.accepted, color: "text-accent" },
-          { label: "Rejected", value: counts.rejected, color: "text-destructive" },
-          { label: "Avg Score", value: avgScore, color: "text-primary" },
-        ].map((s) => (
-          <div key={s.label} className="rounded-xl border border-border bg-card p-5">
-            <div className="text-xs text-muted-foreground mb-2">{s.label}</div>
-            <div className={`font-display text-3xl font-bold ${s.color}`}>{s.value}</div>
+      {/* Stats — 6 cards (4 existing + 2 new KPI) */}
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="text-xs text-muted-foreground mb-2">Pending</div>
+          <div className="font-display text-3xl font-bold text-warning">{counts.pending}</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="text-xs text-muted-foreground mb-2">Accepted</div>
+          <div className="font-display text-3xl font-bold text-accent">{counts.accepted}</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="text-xs text-muted-foreground mb-2">Rejected</div>
+          <div className="font-display text-3xl font-bold text-destructive">{counts.rejected}</div>
+        </div>
+
+        {/* NEW: Acceptance Rate */}
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground">Acceptance Rate</span>
+            <TrendingUp size={14} className="text-accent" />
           </div>
-        ))}
+          <div className="font-display text-3xl font-bold text-accent">
+            {acceptanceRate}
+            <span className="text-base ml-1 text-muted-foreground">%</span>
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-1">
+            จาก {totalResponded} ที่ตอบกลับ
+          </div>
+        </div>
+
+        {/* Existing Avg Score (AI confidence) */}
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="text-xs text-muted-foreground mb-2">Avg AI Score</div>
+          <div className="font-display text-3xl font-bold text-primary">{avgScore}</div>
+          <div className="text-[10px] text-muted-foreground mt-1">match_score เฉลี่ย</div>
+        </div>
+
+        {/* NEW: Avg User Rating (KPI #8) */}
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground">Avg Rating</span>
+            <Star size={14} className="text-warning" />
+          </div>
+          <div className="font-display text-3xl font-bold text-warning">
+            {ratingStats.avgRating !== null ? (
+              <>
+                {ratingStats.avgRating}
+                <span className="text-base ml-1 text-muted-foreground">/ 5</span>
+              </>
+            ) : (
+              "—"
+            )}
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-1">
+            {ratingStats.totalReviews > 0
+              ? `จาก ${ratingStats.totalReviews} reviews · 30 วัน`
+              : "ยังไม่มี reviews"}
+          </div>
+        </div>
       </div>
 
       {/* Filter tabs */}
@@ -254,7 +331,6 @@ export default function Matchmaking() {
               className="px-5 py-4 flex items-center gap-4 hover:bg-background/40 transition cursor-pointer"
               onClick={() => setSelected(m)}
             >
-              {/* Score badge */}
               <div
                 className={`shrink-0 w-14 h-14 rounded-lg flex flex-col items-center justify-center text-sm font-bold border ${
                   m.match_score >= 0.8
@@ -299,7 +375,7 @@ export default function Matchmaking() {
         </ul>
       </div>
 
-      {/* Detail drawer */}
+      {/* Detail drawer (unchanged) */}
       {selected && (
         <div className="fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/60" onClick={() => setSelected(null)} />
