@@ -60,11 +60,7 @@ export default function Overview() {
           .select("id", { count: "exact", head: true })
           .eq("community_id", id)
           .eq("is_active", true),
-        supabase
-          .from("posts")
-          .select("user_id")
-          .eq("community_id", id)
-          .gte("created_at", iso7d),
+        supabase.from("posts").select("user_id").eq("community_id", id).gte("created_at", iso7d),
         supabase
           .from("moderation_logs")
           .select("id", { count: "exact", head: true })
@@ -92,10 +88,7 @@ export default function Overview() {
           .select("created_at")
           .eq("community_id", id)
           .gte("created_at", iso30d),
-        supabase
-          .from("match_ratings")
-          .select("rating")
-          .gte("created_at", iso30d),
+        supabase.from("match_ratings").select("rating").gte("created_at", iso30d),
       ]);
 
       const activeIds = new Set((activeMembers.data ?? []).map((r) => r.user_id));
@@ -105,12 +98,11 @@ export default function Overview() {
       const avgPostsPerDay = Math.round(postsCount / 7);
 
       const spamCount = spam30d.count ?? 0;
-      const timeSavedHours = +(spamCount * AVG_REVIEW_SECONDS_PER_POST / 3600).toFixed(1);
+      const timeSavedHours = +((spamCount * AVG_REVIEW_SECONDS_PER_POST) / 3600).toFixed(1);
 
       const matchesTotal = matches7d.count ?? 0;
       const matchesOk = matchesAccepted7d.count ?? 0;
-      const acceptanceRate =
-        matchesTotal > 0 ? Math.round((matchesOk / matchesTotal) * 100) : 0;
+      const acceptanceRate = matchesTotal > 0 ? Math.round((matchesOk / matchesTotal) * 100) : 0;
 
       const hourCounts: Record<number, number> = {};
       (peakHourData.data ?? []).forEach((row) => {
@@ -125,8 +117,7 @@ export default function Overview() {
           peakHour = parseInt(h);
         }
       }
-      const peakHourLabel =
-        peakHour >= 0 ? `${String(peakHour).padStart(2, "0")}:00` : "—";
+      const peakHourLabel = peakHour >= 0 ? `${String(peakHour).padStart(2, "0")}:00` : "—";
 
       const ratings = (ratings30d.data ?? []).map((r) => r.rating);
       const avgRating =
@@ -135,8 +126,7 @@ export default function Overview() {
           : null;
 
       const totalCount = totalMembers.count ?? 0;
-      const activeRate =
-        totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0;
+      const activeRate = totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0;
 
       return {
         timeSavedHours,
@@ -229,10 +219,9 @@ export default function Overview() {
       toast.success("ดาวน์โหลด PDF สำเร็จ!", { id: toastId });
     } catch (err) {
       console.error("PDF export error:", err);
-      toast.error(
-        `สร้าง PDF ไม่สำเร็จ: ${err instanceof Error ? err.message : "unknown"}`,
-        { id: toastId },
-      );
+      toast.error(`สร้าง PDF ไม่สำเร็จ: ${err instanceof Error ? err.message : "unknown"}`, {
+        id: toastId,
+      });
     } finally {
       setExporting(false);
     }
@@ -296,17 +285,13 @@ export default function Overview() {
     },
     {
       label: "Matches",
-      sub: stats.data
-        ? `${stats.data.acceptanceRate}% accept · 7 วัน`
-        : "7 วันล่าสุด",
+      sub: stats.data ? `${stats.data.acceptanceRate}% accept · 7 วัน` : "7 วันล่าสุด",
       value: stats.data?.matchesTotal ?? "—",
       icon: Swords,
     },
     {
       label: "Avg Rating",
-      sub: stats.data?.ratingsCount
-        ? `จาก ${stats.data.ratingsCount} reviews`
-        : "30 วันล่าสุด",
+      sub: stats.data?.ratingsCount ? `จาก ${stats.data.ratingsCount} reviews` : "30 วันล่าสุด",
       value:
         stats.data?.avgRating !== null && stats.data?.avgRating !== undefined
           ? `${stats.data.avgRating} / 5`
@@ -339,10 +324,7 @@ export default function Overview() {
           <div key={c.label} className="rounded-xl border border-border bg-card p-5">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-muted-foreground">{c.label}</span>
-              <c.icon
-                size={16}
-                className={c.color === "accent" ? "text-accent" : "text-primary"}
-              />
+              <c.icon size={16} className={c.color === "accent" ? "text-accent" : "text-primary"} />
             </div>
             <div className="font-display text-3xl md:text-4xl font-bold mb-1">
               {stats.isLoading ? "..." : c.value}
@@ -359,10 +341,7 @@ export default function Overview() {
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {secondaryCards.map((c) => (
-            <div
-              key={c.label}
-              className="rounded-lg border border-border bg-card/50 p-4"
-            >
+            <div key={c.label} className="rounded-lg border border-border bg-card/50 p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-muted-foreground">{c.label}</span>
                 <c.icon size={14} className="text-muted-foreground" />

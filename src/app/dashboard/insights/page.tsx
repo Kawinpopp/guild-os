@@ -3,15 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCommunity } from "@/lib/use-community";
-import {
-  TrendingUp,
-  Users,
-  Shield,
-  Swords,
-  MessageCircle,
-  Clock,
-  Flame,
-} from "lucide-react";
+import { TrendingUp, Users, Shield, Swords, MessageCircle, Clock, Flame } from "lucide-react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -30,13 +22,13 @@ import {
 
 // Chart colors — hardcoded เพื่อให้ Recharts ใช้ได้
 const CHART_COLORS = {
-  primary: "#A78BFA",      // purple (matches text-primary)
-  accent: "#34D399",       // emerald green (active)
-  warning: "#FBBF24",      // amber
-  destructive: "#F87171",  // red
-  muted: "#4B5563",        // gray (inactive)
-  axis: "#9CA3AF",         // light gray for labels
-  grid: "#374151",         // dark gray for grid
+  primary: "#A78BFA", // purple (matches text-primary)
+  accent: "#34D399", // emerald green (active)
+  warning: "#FBBF24", // amber
+  destructive: "#F87171", // red
+  muted: "#4B5563", // gray (inactive)
+  axis: "#9CA3AF", // light gray for labels
+  grid: "#374151", // dark gray for grid
 };
 
 type DayStat = {
@@ -99,60 +91,52 @@ export default function Insights() {
       const since7d = days[0].date;
       const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-      const [
-        membersRes,
-        postsRes,
-        removedRes,
-        matchesRes,
-        topRes,
-        countRes,
-        activeRes,
-        hourRes,
-      ] = await Promise.all([
-        supabase
-          .from("community_members")
-          .select("joined_at")
-          .eq("community_id", id)
-          .gte("joined_at", since7d),
-        supabase
-          .from("posts")
-          .select("created_at, content_type")
-          .eq("community_id", id)
-          .gte("created_at", since7d),
-        supabase
-          .from("moderation_logs")
-          .select("created_at")
-          .eq("community_id", id)
-          .eq("action_taken", "remove")
-          .gte("created_at", since7d),
-        supabase
-          .from("matches")
-          .select("requested_at")
-          .eq("community_id", id)
-          .gte("requested_at", since7d),
-        supabase
-          .from("community_members")
-          .select("users(display_name, warning_count, status)")
-          .eq("community_id", id)
-          .eq("is_active", true)
-          .order("joined_at", { ascending: true })
-          .limit(5),
-        supabase
-          .from("community_members")
-          .select("id", { count: "exact", head: true })
-          .eq("community_id", id)
-          .eq("is_active", true),
-        supabase
-          .from("posts")
-          .select("user_id")
-          .eq("community_id", id)
-          .gte("created_at", since7d),
-        supabase
-          .from("posts")
-          .select("created_at")
-          .eq("community_id", id)
-          .gte("created_at", since30d),
-      ]);
+      const [membersRes, postsRes, removedRes, matchesRes, topRes, countRes, activeRes, hourRes] =
+        await Promise.all([
+          supabase
+            .from("community_members")
+            .select("joined_at")
+            .eq("community_id", id)
+            .gte("joined_at", since7d),
+          supabase
+            .from("posts")
+            .select("created_at, content_type")
+            .eq("community_id", id)
+            .gte("created_at", since7d),
+          supabase
+            .from("moderation_logs")
+            .select("created_at")
+            .eq("community_id", id)
+            .eq("action_taken", "remove")
+            .gte("created_at", since7d),
+          supabase
+            .from("matches")
+            .select("requested_at")
+            .eq("community_id", id)
+            .gte("requested_at", since7d),
+          supabase
+            .from("community_members")
+            .select("users(display_name, warning_count, status)")
+            .eq("community_id", id)
+            .eq("is_active", true)
+            .order("joined_at", { ascending: true })
+            .limit(5),
+          supabase
+            .from("community_members")
+            .select("id", { count: "exact", head: true })
+            .eq("community_id", id)
+            .eq("is_active", true),
+          supabase
+            .from("posts")
+            .select("user_id")
+            .eq("community_id", id)
+            .gte("created_at", since7d),
+          supabase
+            .from("posts")
+            .select("created_at")
+            .eq("community_id", id)
+            .gte("created_at", since30d),
+        ]);
 
       const bucket = (iso: string) => {
         const d = new Date(iso);
@@ -222,7 +206,12 @@ export default function Insights() {
 
   const summary = [
     { label: "Total Members", value: totals.members, icon: Users, color: "text-primary" },
-    { label: "Active (7d)", value: `${totals.active} (${activeRate}%)`, icon: Flame, color: "text-accent" },
+    {
+      label: "Active (7d)",
+      value: `${totals.active} (${activeRate}%)`,
+      icon: Flame,
+      color: "text-accent",
+    },
     { label: "Posts Removed (7d)", value: totals.removed, icon: Shield, color: "text-destructive" },
     { label: "Matches (7d)", value: totals.matches, icon: Swords, color: "text-accent" },
   ];
@@ -335,12 +324,7 @@ export default function Insights() {
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={hourStats}>
               <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
-              <XAxis
-                dataKey="hour"
-                stroke={CHART_COLORS.axis}
-                fontSize={9}
-                interval={3}
-              />
+              <XAxis dataKey="hour" stroke={CHART_COLORS.axis} fontSize={9} interval={3} />
               <YAxis stroke={CHART_COLORS.axis} fontSize={11} />
               <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="count" fill={CHART_COLORS.warning} radius={[4, 4, 0, 0]} />
