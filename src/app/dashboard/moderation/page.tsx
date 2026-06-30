@@ -84,13 +84,11 @@ export default function Moderation() {
 
     const rows = data ?? [];
     const removed = rows.filter((r) => r.action_taken === "remove").length;
-    const timeSavedHours = +(removed * AVG_REVIEW_SECONDS_PER_POST / 3600).toFixed(1);
+    const timeSavedHours = +((removed * AVG_REVIEW_SECONDS_PER_POST) / 3600).toFixed(1);
 
     const scores = rows.map((r) => r.confidence_score).filter((s) => s != null);
     const avgConfidence =
-      scores.length > 0
-        ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 100)
-        : 0;
+      scores.length > 0 ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 100) : 0;
 
     setStats30d({
       timeSavedHours,
@@ -182,7 +180,15 @@ export default function Moderation() {
           <h1 className="text-3xl mb-1">AI Moderation</h1>
           <p className="text-sm text-muted-foreground">ตรวจจับและจัดการโพสต์ที่ไม่เหมาะสมด้วย AI</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => { load(); loadStats(); }} disabled={loading}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            load();
+            loadStats();
+          }}
+          disabled={loading}
+        >
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Refresh
         </Button>
       </div>
@@ -237,9 +243,7 @@ export default function Moderation() {
             {stats30d.avgConfidence}
             <span className="text-base ml-1 text-muted-foreground">%</span>
           </div>
-          <div className="text-[10px] text-muted-foreground mt-1">
-            ค่าเฉลี่ย · 30 วัน
-          </div>
+          <div className="text-[10px] text-muted-foreground mt-1">ค่าเฉลี่ย · 30 วัน</div>
         </div>
       </div>
 

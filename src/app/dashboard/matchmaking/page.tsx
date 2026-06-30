@@ -86,9 +86,7 @@ export default function Matchmaking() {
 
     const ratings = (data ?? []).map((r) => r.rating);
     const avg =
-      ratings.length > 0
-        ? +(ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
-        : null;
+      ratings.length > 0 ? +(ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : null;
 
     setRatingStats({
       avgRating: avg,
