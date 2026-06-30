@@ -96,6 +96,7 @@ export default function Insights() {
       const since7d = days[0].date;
       const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
+<<<<<<< HEAD
       const [
         membersRes,
         postsRes,
@@ -155,6 +156,54 @@ export default function Insights() {
           .eq("action_taken", "remove")
           .gte("created_at", since30d),
       ]);
+=======
+      const [membersRes, postsRes, removedRes, matchesRes, topRes, countRes, activeRes, hourRes] =
+        await Promise.all([
+          supabase
+            .from("community_members")
+            .select("joined_at")
+            .eq("community_id", id)
+            .gte("joined_at", since7d),
+          supabase
+            .from("posts")
+            .select("created_at, content_type")
+            .eq("community_id", id)
+            .gte("created_at", since7d),
+          supabase
+            .from("moderation_logs")
+            .select("created_at")
+            .eq("community_id", id)
+            .eq("action_taken", "remove")
+            .gte("created_at", since7d),
+          supabase
+            .from("matches")
+            .select("requested_at")
+            .eq("community_id", id)
+            .gte("requested_at", since7d),
+          supabase
+            .from("community_members")
+            .select("users(display_name, warning_count, status)")
+            .eq("community_id", id)
+            .eq("is_active", true)
+            .order("joined_at", { ascending: true })
+            .limit(5),
+          supabase
+            .from("community_members")
+            .select("id", { count: "exact", head: true })
+            .eq("community_id", id)
+            .eq("is_active", true),
+          supabase
+            .from("posts")
+            .select("user_id")
+            .eq("community_id", id)
+            .gte("created_at", since7d),
+          supabase
+            .from("posts")
+            .select("created_at")
+            .eq("community_id", id)
+            .gte("created_at", since30d),
+        ]);
+>>>>>>> origin/main
 
       const bucket = (iso: string) => {
         const d = new Date(iso);

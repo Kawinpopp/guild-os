@@ -197,7 +197,7 @@ export default function Matchmaking() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [community]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [community]);
 
   const filtered = filter === "all" ? matches : matches.filter((m) => m.status === filter);
 
