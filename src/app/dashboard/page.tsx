@@ -125,7 +125,7 @@ export default function Overview() {
           ? +(ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
           : null;
 
-      const totalCount = totalMembers.count ?? 0;
+      const totalCount = community?.total_members ?? totalMembers.count ?? 0;
       const activeRate = totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0;
 
       return {

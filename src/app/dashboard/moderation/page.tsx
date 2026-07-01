@@ -154,7 +154,7 @@ export default function Moderation() {
   };
 
   const isReviewed = (item: ModerationItem) =>
-    item.human_reviews.length > 0 && item.human_reviews[0].decision != null;
+    (item.human_reviews?.length ?? 0) > 0 && item.human_reviews![0].decision != null;
 
   const filtered = items.filter((item) => {
     if (filter === "pending") return item.requires_review && !isReviewed(item);
@@ -313,7 +313,7 @@ export default function Moderation() {
                   </span>
                   {isReviewed(item) && (
                     <span className="text-[10px] px-2 py-0.5 rounded bg-accent/15 text-accent font-semibold">
-                      {item.human_reviews[0].decision}
+                      {item.human_reviews?.[0]?.decision}
                     </span>
                   )}
                 </div>
@@ -417,7 +417,7 @@ export default function Moderation() {
                 <div className="col-span-2">
                   <div className="text-xs text-muted-foreground mb-1">Human Decision</div>
                   <div className="capitalize font-semibold text-accent">
-                    {selected.human_reviews[0].decision}
+                    {selected.human_reviews?.[0]?.decision}
                   </div>
                 </div>
               )}
