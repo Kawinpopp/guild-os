@@ -65,6 +65,11 @@ export default function Insights() {
     matches: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [heat, setHeat] = useState<{ grid: number[][]; max: number }>({
+    grid: Array.from({ length: 7 }, () => Array(24).fill(0)),
+    max: 1,
+  });
+  const [spamHours, setSpamHours] = useState<{ hour: string; count: number }[]>([]);
 
   useEffect(() => {
     if (!community) return;
@@ -91,52 +96,65 @@ export default function Insights() {
       const since7d = days[0].date;
       const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-      const [membersRes, postsRes, removedRes, matchesRes, topRes, countRes, activeRes, hourRes] =
-        await Promise.all([
-          supabase
-            .from("community_members")
-            .select("joined_at")
-            .eq("community_id", id)
-            .gte("joined_at", since7d),
-          supabase
-            .from("posts")
-            .select("created_at, content_type")
-            .eq("community_id", id)
-            .gte("created_at", since7d),
-          supabase
-            .from("moderation_logs")
-            .select("created_at")
-            .eq("community_id", id)
-            .eq("action_taken", "remove")
-            .gte("created_at", since7d),
-          supabase
-            .from("matches")
-            .select("requested_at")
-            .eq("community_id", id)
-            .gte("requested_at", since7d),
-          supabase
-            .from("community_members")
-            .select("users(display_name, warning_count, status)")
-            .eq("community_id", id)
-            .eq("is_active", true)
-            .order("joined_at", { ascending: true })
-            .limit(5),
-          supabase
-            .from("community_members")
-            .select("id", { count: "exact", head: true })
-            .eq("community_id", id)
-            .eq("is_active", true),
-          supabase
-            .from("posts")
-            .select("user_id")
-            .eq("community_id", id)
-            .gte("created_at", since7d),
-          supabase
-            .from("posts")
-            .select("created_at")
-            .eq("community_id", id)
-            .gte("created_at", since30d),
-        ]);
+      const [
+        membersRes,
+        postsRes,
+        removedRes,
+        matchesRes,
+        topRes,
+        countRes,
+        activeRes,
+        hourRes,
+        spamHourRes,
+      ] = await Promise.all([
+        supabase
+          .from("community_members")
+          .select("joined_at")
+          .eq("community_id", id)
+          .gte("joined_at", since7d),
+        supabase
+          .from("posts")
+          .select("created_at, content_type")
+          .eq("community_id", id)
+          .gte("created_at", since7d),
+        supabase
+          .from("moderation_logs")
+          .select("created_at")
+          .eq("community_id", id)
+          .eq("action_taken", "remove")
+          .gte("created_at", since7d),
+        supabase
+          .from("matches")
+          .select("requested_at")
+          .eq("community_id", id)
+          .gte("requested_at", since7d),
+        supabase
+          .from("community_members")
+          .select("users(display_name, warning_count, status)")
+          .eq("community_id", id)
+          .eq("is_active", true)
+          .order("joined_at", { ascending: true })
+          .limit(5),
+        supabase
+          .from("community_members")
+          .select("id", { count: "exact", head: true })
+          .eq("community_id", id)
+          .eq("is_active", true),
+        supabase.from("posts").select("user_id").eq("community_id", id).gte("created_at", since7d),
+        supabase
+          .from("posts")
+          .select("created_at")
+          .eq("community_id", id)
+          .gte("created_at", since30d),
+
+        // Spam logs (30 days) — for Spam by Hour
+        supabase
+          .from("moderation_logs")
+          .select("created_at")
+          .eq("community_id", id)
+          .eq("action_taken", "remove")
+          .gte("created_at", since30d),
+      ]);
 
       const bucket = (iso: string) => {
         const d = new Date(iso);
@@ -178,6 +196,25 @@ export default function Insights() {
         count: hourCounts[h] ?? 0,
       }));
 
+      // Heatmap: 7 weekdays × 24 hours
+      const heatGrid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
+      (hourRes.data ?? []).forEach((row) => {
+        const dt = new Date(row.created_at);
+        heatGrid[dt.getDay()][dt.getHours()]++;
+      });
+      const heatMax = Math.max(...heatGrid.flat(), 1);
+
+      // Spam by hour (24)
+      const spamByHour: number[] = Array(24).fill(0);
+      (spamHourRes.data ?? []).forEach((row) => {
+        const h = new Date(row.created_at).getHours();
+        spamByHour[h]++;
+      });
+      const spamHourData = spamByHour.map((count, h) => ({
+        hour: `${String(h).padStart(2, "0")}:00`,
+        count,
+      }));
+
       const activeIds = new Set((activeRes.data ?? []).map((r) => r.user_id));
 
       const top = (topRes.data ?? [])
@@ -187,6 +224,8 @@ export default function Insights() {
 
       setStats(days);
       setHourStats(hours);
+      setHeat({ grid: heatGrid, max: heatMax });
+      setSpamHours(spamHourData);
       setTopMembers(top);
       setTotals({
         members: countRes.count ?? 0,
@@ -253,36 +292,55 @@ export default function Insights() {
 
       {/* Posts & Comments line chart */}
       <div className="rounded-xl border border-border bg-card p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <MessageCircle size={16} className="text-primary" />
-          <h2 className="text-lg">Posts & Comments (7 วัน)</h2>
+        <div className="flex items-center gap-2 mb-2">
+          <Clock size={16} className="text-warning" />
+          <h2 className="text-lg">Peak Activity Hours (30 วัน)</h2>
         </div>
-        <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={stats}>
-            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
-            <XAxis dataKey="label" stroke={CHART_COLORS.axis} fontSize={11} />
-            <YAxis stroke={CHART_COLORS.axis} fontSize={11} />
-            <Tooltip contentStyle={tooltipStyle} />
-            <Legend wrapperStyle={{ fontSize: 12, color: CHART_COLORS.axis }} />
-            <Line
-              type="monotone"
-              dataKey="posts"
-              stroke={CHART_COLORS.primary}
-              strokeWidth={2}
-              name="Posts"
-              dot={{ r: 4, fill: CHART_COLORS.primary }}
-            />
-            <Line
-              type="monotone"
-              dataKey="comments"
-              stroke={CHART_COLORS.accent}
-              strokeWidth={2}
-              name="Comments"
-              dot={{ r: 4, fill: CHART_COLORS.accent }}
-              strokeDasharray="5 5"
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <p className="text-xs text-muted-foreground mb-4">ช่องสีเข้ม = คนโพสต์เยอะ</p>
+        <div className="overflow-x-auto">
+          <div className="min-w-[480px]">
+            <div className="flex gap-[2px] mb-1 pl-8">
+              {Array.from({ length: 24 }, (_, h) => (
+                <div key={h} className="flex-1 text-center text-[8px] text-muted-foreground">
+                  {h % 3 === 0 ? String(h).padStart(2, "0") : ""}
+                </div>
+              ))}
+            </div>
+            {["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"].map((dayLabel, dayIdx) => (
+              <div key={dayIdx} className="flex items-center gap-[2px] mb-[2px]">
+                <div className="w-7 text-[10px] text-muted-foreground text-right pr-1 shrink-0">
+                  {dayLabel}
+                </div>
+                {heat.grid[dayIdx].map((count, hourIdx) => (
+                  <div
+                    key={hourIdx}
+                    className="flex-1 aspect-square rounded-[2px] min-w-[12px]"
+                    style={{
+                      backgroundColor:
+                        count === 0
+                          ? "#1F2937"
+                          : `rgba(251, 191, 36, ${0.15 + (count / heat.max) * 0.85})`,
+                    }}
+                    title={`${dayLabel} ${String(hourIdx).padStart(2, "0")}:00 — ${count} โพสต์`}
+                  />
+                ))}
+              </div>
+            ))}
+            <div className="flex items-center gap-2 mt-3 pl-8">
+              <span className="text-[10px] text-muted-foreground">น้อย</span>
+              <div className="flex gap-[2px]">
+                {[0.15, 0.35, 0.55, 0.75, 1].map((op, i) => (
+                  <div
+                    key={i}
+                    className="w-4 h-3 rounded-[2px]"
+                    style={{ backgroundColor: `rgba(251, 191, 36, ${op})` }}
+                  />
+                ))}
+              </div>
+              <span className="text-[10px] text-muted-foreground">มาก</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Active donut + Peak Hours */}
@@ -346,6 +404,24 @@ export default function Insights() {
             <YAxis stroke={CHART_COLORS.axis} fontSize={11} />
             <Tooltip contentStyle={tooltipStyle} />
             <Bar dataKey="removed" fill={CHART_COLORS.destructive} radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Spam by Hour */}
+      <div className="rounded-xl border border-border bg-card p-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Shield size={16} className="text-destructive" />
+          <h2 className="text-lg">Spam by Hour (30 วัน)</h2>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">ช่วงเวลาที่ AI บล็อกสแปมบ่อยที่สุด</p>
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={spamHours}>
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
+            <XAxis dataKey="hour" stroke={CHART_COLORS.axis} fontSize={9} interval={3} />
+            <YAxis stroke={CHART_COLORS.axis} fontSize={11} />
+            <Tooltip contentStyle={tooltipStyle} />
+            <Bar dataKey="count" fill={CHART_COLORS.destructive} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
